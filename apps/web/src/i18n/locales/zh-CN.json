@@ -1,0 +1,256 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "confirm": "确认",
+    "cancel": "取消",
+    "delete": "删除",
+    "clear": "清空",
+    "add": "添加",
+    "search": "搜索",
+    "upload": "上传",
+    "close": "关闭"
+  },
+  "chat": {
+    "newChat": "新对话",
+    "startNewChat": "开始新的对话",
+    "totalMessages": "共 {{count}} 条消息",
+    "inputPlaceholder": "输入消息，按 Enter 发送...",
+    "sending": "发送中...",
+    "regenerate": "重新生成",
+    "copy": "复制",
+    "copied": "已复制",
+    "feedback": "反馈",
+    "errorMessage": "抱歉，出现了错误。请稍后再试。"
+  },
+  "welcome": {
+    "title": "有什么可以帮你？",
+    "subtitle": "选择一个话题开始，或直接输入你的问题",
+    "moreSkills": "更多技能 ",
+    "prompts": {
+      "deepThinking": "开启深度思考",
+      "deepThinkingDesc": "通过内部数据推理生成洞察",
+      "deepResearch": "运行深度研究",
+      "deepResearchDesc": "内外部数据深度研究与报告",
+      "readDoc": "读取文档/图片",
+      "readDocDesc": "从文档中读取提取信息",
+      "meetingMinutes": "撰写会议纪要",
+      "meetingMinutesDesc": "根据会议记录整理纪要",
+      "webSearch": "搜索网络",
+      "webSearchDesc": "搜索互联网获取实时信息",
+      "docSearch": "搜索文档",
+      "docSearchDesc": "从知识库搜索相关文档",
+      "pptGenerate": "生成 PPT",
+      "pptGenerateDesc": "通过内部数据推理生成 PPT"
+    }
+  },
+  "sidebar": {
+    "sessions": "全部对话",
+    "newSession": "开始新对话",
+    "skills": "技能中心",
+    "memory": "记忆管理",
+    "knowledge": "临时知识库",
+    "prompts": "提示词库",
+    "tools": "联网搜索",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式",
+    "feedback": "反馈建议",
+    "deleteSession": "删除会话",
+    "deleteSessionConfirm": "确定要删除这个会话吗？",
+    "history": "历史记录",
+    "tagline": "智能对话 · 无限可能",
+    "user": "AIESA USER",
+    "freePlan": "POC version"
+  },
+  "memory": {
+    "title": "记忆管理",
+    "description": "AI 会自动记住对话中的重要信息",
+    "empty": "暂无记忆",
+    "emptyDesc": "AI 会自动记住对话中的重要信息",
+    "clearAll": "清空记忆",
+    "clearAllConfirm": "确定要清空所有记忆吗？",
+    "delete": "删除记忆",
+    "topics": "话题",
+    "createdAt": "创建时间"
+  },
+  "knowledge": {
+    "title": "临时知识库",
+    "uploadFile": "上传",
+    "addUrl": "URL",
+    "addText": "文本",
+    "urlPlaceholder": "输入URL地址",
+    "textNamePlaceholder": "文档名称",
+    "textContentPlaceholder": "输入文本内容...",
+    "searchPlaceholder": "搜索知识库...",
+    "searchResults": "搜索结果 ({{count}})",
+    "unknownSource": "未知来源",
+    "stats": {
+      "documents": "文档",
+      "vectors": "向量",
+      "size": "大小"
+    },
+    "vectorWarning": "向量数为 0，知识库可能未正确建立",
+    "testSearchSuccess": "测试搜索成功，返回 {{count}} 条结果",
+    "uploadedDocs": "已上传文档",
+    "clearAll": "清空全部",
+    "empty": "暂无文档",
+    "emptyDesc": "上传文档后可进行知识检索",
+    "supportedFormats": "支持 PDF、TXT、MD、HTML 等格式",
+    "chunks": "块",
+    "vectorsIndexed": "{{count}} 个向量已索引",
+    "parsing": "正在解析网页...",
+    "parseSuccess": "网页解析成功",
+    "parseFailed": "网页解析失败",
+    "parseFailedHint": "请检查URL是否正确，或尝试使用'添加文本'功能手动输入内容",
+    "urlHint": "支持静态网页。动态加载页面、需要登录的页面可能无法解析，请使用'添加文本'功能。",
+    "website": "网页",
+    "webSummary": "网页摘要",
+    "collapse": "收起",
+    "expandAll": "展开全部 ({{count}} 字符)",
+    "viewOriginal": "查看原文",
+    "collapseSummary": "收起摘要",
+    "viewSummary": "查看摘要",
+    "relevance": "{{percent}}% 相关"
+  },
+  "tools": {
+    "title": "联网搜索",
+    "description": "选择对话中可用的能力",
+    "webSearch": "联网搜索",
+    "webSearchDesc": "搜索互联网获取最新信息",
+    "webSearchEnabled": "AI 将在需要时自动搜索网络获取最新信息"
+  },
+  "prompts": {
+    "title": "提示词库",
+    "description": "选择一个提示词快速开始对话，支持中英文",
+    "configDescription": "管理自定义提示词分类和内容",
+    "addCustom": "添加自定义提示词",
+    "customCategory": "我的提示词",
+    "addCategory": "添加分类",
+    "addPrompt": "添加提示词",
+    "noCategories": "暂无分类",
+    "emptyHint": "请在配置面板中添加自定义提示词分类",
+    "noPrompts": "当前分类暂无提示词",
+    "categoryNamePlaceholder": "分类名称（中文）",
+    "categoryNameEnPlaceholder": "Category Name (English)",
+    "categories": {
+      "thinking": "思考分析",
+      "search": "搜索查询",
+      "code": "代码开发",
+      "writing": "文案写作",
+      "analysis": "分析总结",
+      "creative": "创意灵感"
+    },
+    "form": {
+      "titlePlaceholder": "提示词名称（中文）",
+      "titleEnPlaceholder": "Prompt Name (English)",
+      "promptPlaceholder": "提示词内容（中文）",
+      "promptEnPlaceholder": "Prompt Content (English)"
+    }
+  },
+  "input": {
+    "knowledge": "临时知识库",
+    "memory": "记忆",
+    "webSearch": "联网搜索",
+    "webSearchEnabled": "联网搜索 ✓"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "daysAgo": "{{count}}天前"
+  },
+  "skills": {
+    "title": "技能中心",
+    "studio": "Skills Studio",
+    "description": "选择技能，释放 AI 无限可能",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "pinned": "已置顶",
+    "items": {
+      "deepThinking": {
+        "name": "开启深度思考",
+        "desc": "通过内部数据推理生成洞察"
+      },
+      "deepResearch": {
+        "name": "运行深度研究",
+        "desc": "内外部数据深度研究与报告"
+      },
+      "readDoc": {
+        "name": "读取文档/图片",
+        "desc": "从文档中读取提取信息"
+      },
+      "meetingMinutes": {
+        "name": "撰写会议纪要",
+        "desc": "根据会议记录整理纪要"
+      },
+      "webSearch": {
+        "name": "搜索网络",
+        "desc": "搜索互联网获取实时信息"
+      },
+      "docSearch": {
+        "name": "搜索文档",
+        "desc": "从知识库搜索相关文档"
+      },
+      "pptGenerate": {
+        "name": "生成 PPT",
+        "desc": "通过内部数据推理生成 PPT"
+      }
+    },
+    "prompts": {
+      "deepThinking": "请开启深度思考模式，对以下内容进行深入分析：",
+      "deepResearch": "请对以下主题进行深度研究，并生成详细报告：",
+      "readDoc": "请读取并分析以下文档/图片，提取关键信息：",
+      "meetingMinutes": "请根据以下会议记录，整理一份完整的会议纪要：",
+      "webSearch": "请帮我搜索以下内容的最新信息：",
+      "docSearch": "请从知识库中搜索以下相关内容：",
+      "pptGenerate": "请根据以下内容生成一份 PPT 大纲："
+    }
+  },
+  "styleConfig": {
+    "title": "Agent Style Config",
+    "subtitle": "自定义您的智能体外观样式",
+    "tabs": {
+      "general": "基本信息",
+      "logo": "Logo",
+      "colors": "主题色",
+      "welcome": "欢迎页",
+      "prompts": "提示词"
+    },
+    "fields": {
+      "name": "Agent 名称",
+      "nameEn": "Agent 名称 (英文)",
+      "tagline": "标语",
+      "taglineEn": "标语 (英文)",
+      "subtitle": "副标题",
+      "subtitleEn": "副标题 (英文)",
+      "logoType": "Logo 类型",
+      "shape": "形状",
+      "icon": "图标",
+      "preview": "预览",
+      "customLogoUrl": "自定义 Logo URL",
+      "primaryColor": "主色调",
+      "secondaryColor": "次色调",
+      "accentColor": "强调色",
+      "welcomeTitle": "欢迎标题",
+      "welcomeTitleEn": "欢迎标题 (英文)",
+      "welcomeSubtitle": "欢迎副标题",
+      "welcomeSubtitleEn": "欢迎副标题 (英文)",
+      "sidebarSize": "侧边栏尺寸",
+      "welcomeSize": "欢迎页尺寸",
+      "iconSizeRatio": "图标比例",
+      "footerText": "底部提示文字",
+      "footerTextEn": "底部提示文字 (英文)"
+                    },
+    "logoTypes": {
+      "generated": "自动生成",
+      "custom": "自定义图片"
+    },
+    "reset": "恢复默认",
+    "save": "保存设置"
+  },
+  "upload": {
+    "uploading": "上传中...",
+    "success": "上传成功",
+    "failed": "上传失败",
+    "selectFile": "选择文件上传"
+  }
+}

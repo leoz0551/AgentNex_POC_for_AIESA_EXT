@@ -1,0 +1,256 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "clear": "Clear",
+    "add": "Add",
+    "search": "Search",
+    "upload": "Upload",
+    "close": "Close"
+  },
+  "chat": {
+    "newChat": "New Chat",
+    "startNewChat": "Start a new conversation",
+    "totalMessages": "{{count}} messages",
+    "inputPlaceholder": "Type a message, press Enter to send...",
+    "sending": "Sending...",
+    "regenerate": "Regenerate",
+    "copy": "Copy",
+    "copied": "Copied",
+    "feedback": "Feedback",
+    "errorMessage": "Sorry, an error occurred. Please try again later."
+  },
+  "welcome": {
+    "title": "How can I help you?",
+    "subtitle": "Choose a topic to start, or type your question directly",
+    "moreSkills": "More Skills ",
+    "prompts": {
+      "deepThinking": "Enable deep thinking",
+      "deepThinkingDesc": "Generate insights through internal data reasoning",
+      "deepResearch": "Run deep research",
+      "deepResearchDesc": "In-depth research & reporting with internal/external data",
+      "readDoc": "Read document / image",
+      "readDocDesc": "Read and extract info you need from documents",
+      "meetingMinutes": "Write meeting minutes",
+      "meetingMinutesDesc": "Compile meeting minutes based on meeting transcripts",
+      "webSearch": "Search the web",
+      "webSearchDesc": "Search the internet for real-time info",
+      "docSearch": "Search documents",
+      "docSearchDesc": "Search relevant documents from knowledge base",
+      "pptGenerate": "PPT Generate",
+      "pptGenerateDesc": "Generate PPT file through internal data reasoning"
+    }
+  },
+  "sidebar": {
+    "sessions": "All Chats",
+    "newSession": "New Chat",
+    "skills": "Skills",
+    "memory": "Memory",
+    "knowledge": "Temporary KB",
+    "prompts": "Prompts Library",
+    "tools": "Web Search",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "feedback": "Feedback",
+    "deleteSession": "Delete Session",
+    "deleteSessionConfirm": "Are you sure you want to delete this session?",
+    "history": "History",
+    "tagline": "Smart Chat · Infinite Possibilities",
+    "user": "AIESA USER",
+    "freePlan": "POC version"
+  },
+  "memory": {
+    "title": "Memory Management",
+    "description": "AI automatically remembers important information from conversations",
+    "empty": "No memories yet",
+    "emptyDesc": "AI will automatically remember important information",
+    "clearAll": "Clear Memory",
+    "clearAllConfirm": "Are you sure you want to clear all memories?",
+    "delete": "Delete memory",
+    "topics": "Topics",
+    "createdAt": "Created at"
+  },
+  "knowledge": {
+    "title": "Temporary KB",
+    "uploadFile": "Upload",
+    "addUrl": "URL",
+    "addText": "Text",
+    "urlPlaceholder": "Enter URL address",
+    "textNamePlaceholder": "Document name",
+    "textContentPlaceholder": "Enter text content...",
+    "searchPlaceholder": "Search knowledge base...",
+    "searchResults": "Search results ({{count}})",
+    "unknownSource": "Unknown source",
+    "stats": {
+      "documents": "Documents",
+      "vectors": "Vectors",
+      "size": "Size"
+    },
+    "vectorWarning": "Vector count is 0, knowledge base may not be properly initialized",
+    "testSearchSuccess": "Test search successful, returned {{count}} results",
+    "uploadedDocs": "Uploaded Documents",
+    "clearAll": "Clear All",
+    "empty": "No documents",
+    "emptyDesc": "Upload documents to enable knowledge retrieval",
+    "supportedFormats": "Supports PDF, TXT, MD, HTML and more",
+    "chunks": "chunks",
+    "vectorsIndexed": "{{count}} vectors indexed",
+    "parsing": "Parsing webpage...",
+    "parseSuccess": "Webpage parsed successfully",
+    "parseFailed": "Failed to parse webpage",
+    "parseFailedHint": "Please check if the URL is correct, or try using 'Add Text' to manually input content",
+    "urlHint": "Supports static pages. Dynamic pages or pages requiring login may fail, please use 'Add Text' instead.",
+    "website": "Website",
+    "webSummary": "Web Summary",
+    "collapse": "Collapse",
+    "expandAll": "Expand all ({{count}} chars)",
+    "viewOriginal": "View Original",
+    "collapseSummary": "Collapse Summary",
+    "viewSummary": "View Summary",
+    "relevance": "{{percent}}% relevant"
+  },
+  "tools": {
+    "title": "Web Search",
+    "description": "Select available capabilities for conversations",
+    "webSearch": "Web Search",
+    "webSearchDesc": "Search the internet for latest information",
+    "webSearchEnabled": "AI will automatically search the web when needed"
+  },
+  "prompts": {
+    "title": "Prompts Library",
+    "description": "Select a prompt to quickly start a conversation, supports bilingual",
+    "configDescription": "Manage custom prompt categories and content",
+    "addCustom": "Add Custom Prompt",
+    "customCategory": "My Prompts",
+    "addCategory": "Add Category",
+    "addPrompt": "Add Prompt",
+    "noCategories": "No categories yet",
+    "emptyHint": "Please add custom prompt categories in the settings panel",
+    "noPrompts": "No prompts in this category",
+    "categoryNamePlaceholder": "Category Name (Chinese)",
+    "categoryNameEnPlaceholder": "Category Name (English)",
+    "categories": {
+      "thinking": "Thinking & Analysis",
+      "search": "Search & Query",
+      "code": "Code & Development",
+      "writing": "Writing & Content",
+      "analysis": "Analysis & Summary",
+      "creative": "Creative & Ideas"
+    },
+    "form": {
+      "titlePlaceholder": "Prompt Name (Chinese)",
+      "titleEnPlaceholder": "Prompt Name (English)",
+      "promptPlaceholder": "Prompt Content (Chinese)",
+      "promptEnPlaceholder": "Prompt Content (English)"
+    }
+  },
+  "input": {
+    "knowledge": "Temporary KB",
+    "memory": "Memory",
+    "webSearch": "Web Search",
+    "webSearchEnabled": "Web Search ✓"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} days ago"
+  },
+  "skills": {
+    "title": "Skills Center",
+    "studio": "Skills Studio",
+    "description": "Select a skill to unlock AI possibilities",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "pinned": "Pinned",
+    "items": {
+      "deepThinking": {
+        "name": "Enable deep thinking",
+        "desc": "Generate insights through internal data reasoning"
+      },
+      "deepResearch": {
+        "name": "Run deep research",
+        "desc": "In-depth research & reporting with internal/external data"
+      },
+      "readDoc": {
+        "name": "Read document / image",
+        "desc": "Read and extract info you need from documents"
+      },
+      "meetingMinutes": {
+        "name": "Write meeting minutes",
+        "desc": "Compile meeting minutes based on meeting transcripts"
+      },
+      "webSearch": {
+        "name": "Search the web",
+        "desc": "Search the internet for real-time info you care about"
+      },
+      "docSearch": {
+        "name": "Search documents",
+        "desc": "Search relevant documents from knowledge base"
+      },
+      "pptGenerate": {
+        "name": "PPT Generate",
+        "desc": "Generate PPT file through internal data reasoning"
+      }
+    },
+    "prompts": {
+      "deepThinking": "Enable deep thinking mode and analyze the following content in depth:",
+      "deepResearch": "Conduct deep research on the following topic and generate a detailed report:",
+      "readDoc": "Read and analyze the following document/image, extract key information:",
+      "meetingMinutes": "Compile meeting minutes based on the following meeting transcript:",
+      "webSearch": "Search the web for the latest information about:",
+      "docSearch": "Search the knowledge base for relevant content about:",
+      "pptGenerate": "Generate a PPT outline based on the following content:"
+    }
+  },
+  "styleConfig": {
+    "title": "Agent Style Config",
+    "subtitle": "Customize your agent appearance style",
+    "tabs": {
+      "general": "General",
+      "logo": "Logo",
+      "colors": "Colors",
+      "welcome": "Welcome",
+      "prompts": "Prompts"
+    },
+    "fields": {
+      "name": "Agent Name",
+      "nameEn": "Agent Name (English)",
+      "tagline": "Tagline",
+      "taglineEn": "Tagline (English)",
+      "subtitle": "Subtitle",
+      "subtitleEn": "Subtitle (English)",
+      "logoType": "Logo Type",
+      "shape": "Shape",
+      "icon": "Icon",
+      "preview": "Preview",
+      "customLogoUrl": "Custom Logo URL",
+      "primaryColor": "Primary Color",
+      "secondaryColor": "Secondary Color",
+      "accentColor": "Accent Color",
+      "welcomeTitle": "Welcome Title",
+      "welcomeTitleEn": "Welcome Title (English)",
+      "welcomeSubtitle": "Welcome Subtitle",
+      "welcomeSubtitleEn": "Welcome Subtitle (English)",
+      "sidebarSize": "Sidebar Size",
+      "welcomeSize": "Welcome Size",
+      "iconSizeRatio": "Icon Ratio",
+      "footerText": "Footer Text",
+      "footerTextEn": "Footer Text (English)"
+                    },
+    "logoTypes": {
+      "generated": "Generated",
+      "custom": "Custom Image"
+    },
+    "reset": "Reset to Default",
+    "save": "Save Settings"
+  },
+  "upload": {
+    "uploading": "Uploading...",
+    "success": "Upload successful",
+    "failed": "Upload failed",
+    "selectFile": "Select file to upload"
+  }
+}
