@@ -17,11 +17,20 @@ logger = logging.getLogger(__name__)
 
 # ==================== API 密钥检查 ====================
 
-if not os.environ.get("DASHSCOPE_API_KEY"):
-    logger.error("DASHSCOPE_API_KEY environment variable is not set")
-    raise ValueError("DASHSCOPE_API_KEY environment variable is required")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+DASHSCOPE_API_KEY = os.environ.get("DASHSCOPE_API_KEY")
+
+if not OPENROUTER_API_KEY:
+    logger.warning("OPENROUTER_API_KEY environment variable is not set")
+if not DASHSCOPE_API_KEY:
+    logger.warning("DASHSCOPE_API_KEY environment variable is not set (used for Embeddings)")
+
+if not OPENROUTER_API_KEY and not DASHSCOPE_API_KEY:
+    logger.error("At least one API Key (OpenRouter or DashScope) is required")
+    raise ValueError("API Key is required")
 
 # ==================== 路径配置 ====================
+
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -38,15 +47,17 @@ DOCUMENTS_META_FILE = DATA_DIR / "documents_meta.json"
 
 # ==================== 模型配置 ====================
 
-MODEL_ID = "qwen-plus"
-MODEL_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+MODEL_ID = "minimax/minimax-m2.5"
+MODEL_BASE_URL = "https://openrouter.ai/api/v1"
+
 
 # ==================== 嵌入模型配置 ====================
 
-# DashScope Embedding 模型（兼容 OpenAI API 格式）
-EMBEDDER_ID = "text-embedding-v3"  # 可选: text-embedding-v2, text-embedding-v1
-EMBEDDER_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+# OpenRouter Qwen3 Embedding (兼容 OpenAI API 格式)
+EMBEDDER_ID = "qwen/qwen3-embedding-8b"
+EMBEDDER_BASE_URL = "https://openrouter.ai/api/v1"
 CHROMA_COLLECTION_NAME = "agentnex_knowledge"
+
 
 # ==================== API 配置 ====================
 

@@ -55,8 +55,6 @@ async def lifespan(app: FastAPI):
     logger.info("Application starting up...")
     yield
     # 关闭时
-    from routers.knowledge import close_selenium_driver
-    close_selenium_driver()
     logger.info("Application shutdown, resources cleaned")
 
 

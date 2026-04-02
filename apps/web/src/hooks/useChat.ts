@@ -56,19 +56,26 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
     const tempAiMsgId = `temp-ai-${Date.now()}`;
     let accumulatedContent = '';
 
+    const tempAiMsg: Message = {
+      id: tempAiMsgId,
+      content: '', // 会在 MessageList 中显示打字效果或直接等待
+      role: 'assistant',
+      timestamp: new Date().toISOString(),
+    };
+
     setCurrentSession(prev => {
       if (!prev) {
         return {
           id: '',
           title: userMessage.slice(0, 20),
-          messages: [tempUserMsg],
+          messages: [tempUserMsg, tempAiMsg],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
       }
       return {
         ...prev,
-        messages: [...prev.messages, tempUserMsg],
+        messages: [...prev.messages, tempUserMsg, tempAiMsg],
       };
     });
 

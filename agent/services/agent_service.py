@@ -11,11 +11,11 @@ import logging
 from typing import List, Optional
 
 from agno.agent import Agent
-from agno.models.dashscope import DashScope
+from agno.models.openai import OpenAIChat
 from agno.memory import MemoryManager
 from agno.tools.memory import MemoryTools
 
-from config import MODEL_ID, MODEL_BASE_URL
+from config import MODEL_ID, MODEL_BASE_URL, OPENROUTER_API_KEY
 from database import db, knowledge
 from tools import get_all_tools
 from prompts import build_dynamic_instructions, get_base_instructions
@@ -40,10 +40,14 @@ def create_memory_manager() -> MemoryManager:
     return MemoryManager(
         db=db,
         # Use the same model as the main Agent for memory extraction
-        model=DashScope(
+        model=OpenAIChat(
             id=MODEL_ID,
-            api_key=os.environ.get("DASHSCOPE_API_KEY"),
-            base_url=MODEL_BASE_URL
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            extra_headers={
+                "HTTP-Referer": "https://github.com/LegendAgent/LegendAgent",
+                "X-Title": "AgentNex POC",
+            }
         ),
         # Additional memory extraction instructions - multilingual support
         additional_instructions="""
@@ -127,10 +131,14 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
     dynamic_instructions = build_dynamic_instructions(user_message)
     
     return Agent(
-        model=DashScope(
+        model=OpenAIChat(
             id=MODEL_ID,
-            api_key=os.environ.get("DASHSCOPE_API_KEY"),
-            base_url=MODEL_BASE_URL
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            extra_headers={
+                "HTTP-Referer": "https://github.com/LegendAgent/LegendAgent",
+                "X-Title": "AgentNex POC",
+            }
         ),
         markdown=True,
         db=db,
@@ -164,10 +172,14 @@ def create_base_agent(user_id: str = "default") -> Agent:
     base_instructions = get_base_instructions()
     
     return Agent(
-        model=DashScope(
+        model=OpenAIChat(
             id=MODEL_ID,
-            api_key=os.environ.get("DASHSCOPE_API_KEY"),
-            base_url=MODEL_BASE_URL
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            extra_headers={
+                "HTTP-Referer": "https://github.com/LegendAgent/LegendAgent",
+                "X-Title": "AgentNex POC",
+            }
         ),
         markdown=True,
         db=db,
@@ -196,10 +208,14 @@ def create_agent_with_memory_tools(user_id: str = "default") -> Agent:
     base_instructions = get_base_instructions()
     
     return Agent(
-        model=DashScope(
+        model=OpenAIChat(
             id=MODEL_ID,
-            api_key=os.environ.get("DASHSCOPE_API_KEY"),
-            base_url=MODEL_BASE_URL
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            extra_headers={
+                "HTTP-Referer": "https://github.com/LegendAgent/LegendAgent",
+                "X-Title": "AgentNex POC",
+            }
         ),
         markdown=True,
         db=db,

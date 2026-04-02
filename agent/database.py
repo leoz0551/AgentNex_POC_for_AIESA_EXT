@@ -15,6 +15,7 @@ from config import (
     EMBEDDER_ID,
     EMBEDDER_BASE_URL,
     CHROMA_COLLECTION_NAME,
+    OPENROUTER_API_KEY,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,12 +30,12 @@ db = SqliteDb(db_file=str(DB_FILE))
 CHROMA_DIR.mkdir(exist_ok=True)
 logger.info(f"ChromaDB directory: {CHROMA_DIR}, exists: {CHROMA_DIR.exists()}")
 
-# 使用 DashScope Embedding API（兼容 OpenAI 格式）
+# 使用 OpenRouter Qwen3 Embedding API（兼容 OpenAI 格式）
 embedder = OpenAIEmbedder(
     id=EMBEDDER_ID,
-    api_key=os.environ.get("DASHSCOPE_API_KEY"),
+    api_key=OPENROUTER_API_KEY,
     base_url=EMBEDDER_BASE_URL,
-    dimensions=1024,  # text-embedding-v3 默认维度
+    dimensions=4096,  # qwen3-embedding-8b 维度
 )
 
 chroma_db = ChromaDb(

@@ -24,10 +24,26 @@ def generate_stream_content(user_message: str, session_id: str, user_id: str = "
         
         full_content = ""
         for chunk in stream:
-            if hasattr(chunk, 'content') and chunk.content:
+            content = ""
+            
+            # 兼容不同版本的 agno/phidata 以及不同模型的返回结构
+            if isinstance(chunk, str):
+                content = chunk
+            elif isinstance(chunk, dict):
+                content = chunk.get("content", chunk.get("delta", ""))
+            elif hasattr(chunk, "content") and chunk.content:
                 content = chunk.content
+            elif hasattr(chunk, "delta") and chunk.delta:
+                content = chunk.delta
+            elif hasattr(chunk, "message") and isinstance(chunk.message, str):
+                content = chunk.message
+                
+            if content:
+                # 累加实际的文本片段
                 full_content += content
                 yield f"data: {json.dumps({'content': content, 'done': False})}\n\n"
+            else:
+                logger.debug(f"Skipped unknown or empty chunk: {type(chunk)} - {chunk}")
         
         # 保存 AI 回复到会话
         ai_msg = Message(content=full_content, role="assistant")

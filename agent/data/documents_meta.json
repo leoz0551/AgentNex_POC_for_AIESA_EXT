@@ -1,26 +1,13 @@
 {
   "documents": [
     {
-      "id": "fd8441da-975f-4a88-8c8e-2e2cff24e524",
-      "filename": "https://pubs.lenovo.com/lxci-overview/",
-      "file_path": "https://pubs.lenovo.com/lxci-overview/",
-      "type": "url",
+      "id": "8e1fce7b-5a7d-49cf-a179-ea01ed8ca652",
+      "filename": "Lenovo Threat Model Templates.docx",
+      "file_path": "data\\knowledge\\8e1fce7b-5a7d-49cf-a179-ea01ed8ca652_Lenovo Threat Model Templates.docx",
+      "type": ".docx",
       "user_id": "default",
       "chunk_count": 0,
-      "created_at": "2026-03-30T19:27:00.894326",
-      "title": "Lenovo XClarity Integrator offerings | XClarity Integrator | Lenovo Docs",
-      "summary": "Lenovo XClarity Integrator offerings\n\nLenovo XClarity Integrator (LXCI) offerings allow users to manage physical infrastructure from leading external virtualization management software tools from Micr..."
-    },
-    {
-      "id": "5e0bec9a-7352-48ce-b8eb-2af491080ef0",
-      "filename": "https://psref.lenovo.com/l/Product/ThinkBook/ThinkBook_16p_G6_IAX",
-      "file_path": "https://psref.lenovo.com/l/Product/ThinkBook/ThinkBook_16p_G6_IAX",
-      "type": "url",
-      "user_id": "default",
-      "chunk_count": 1,
-      "created_at": "2026-03-30T19:51:46.635731",
-      "title": "Lenovo PSREF - Product Specifications Reference",
-      "summary": "Lenovo PSREF - Product Specifications Reference"
+      "created_at": "2026-04-02T16:36:28.434938"
     }
   ]
 }
