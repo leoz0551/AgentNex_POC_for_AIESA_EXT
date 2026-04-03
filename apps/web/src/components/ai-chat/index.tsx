@@ -29,6 +29,7 @@ export function AIChat() {
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false);
   const [skillsPanelWidth, setSkillsPanelWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [brandSettingsOpen, setBrandSettingsOpen] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
 
@@ -107,6 +108,8 @@ export function AIChat() {
     currentSession,
     setCurrentSession,
     loadSessions,
+    selectedSkillId,
+    onClearSkill: () => setSelectedSkillId(null),
   });
 
   // 加载面板数据
@@ -129,8 +132,10 @@ export function AIChat() {
   }, []);
 
   // 处理技能选择
-  const handleSkillSelect = useCallback((_skillId: string, prompt: string) => {
-    setInputValue(prompt);
+  const handleSkillSelect = useCallback((skillId: string, _prompt: string) => {
+    setSelectedSkillId(skillId);
+    // 重置输入框，让用户自己输入内容
+    setInputValue(''); 
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
@@ -138,6 +143,7 @@ export function AIChat() {
 
   // 处理提示词选择 - 自动发送消息
   const handlePromptSelect = useCallback((prompt: string) => {
+    setSelectedSkillId(null); // 选择提示词时清除已选技能
     setInputValue(prompt);
     setPanelView('none'); // 关闭面板
     // 短暂延迟后自动提交
@@ -293,7 +299,7 @@ export function AIChat() {
             </div>
           ) : messages.length === 0 ? (
             <WelcomeScreen 
-              onSelectPrompt={setInputValue} 
+              onSkillSelect={handleSkillSelect}
               onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
               brandConfig={styleConfig}
             />
@@ -322,6 +328,9 @@ export function AIChat() {
             fileInputRef={fileInputRef}
             onSubmit={handleSubmit}
             onFileUpload={handleFileUpload}
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+            onClearSkill={() => setSelectedSkillId(null)}
             styleConfig={styleConfig}
           />
         </div>

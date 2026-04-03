@@ -7,9 +7,17 @@ interface UseChatOptions {
   currentSession: Session | null;
   setCurrentSession: React.Dispatch<React.SetStateAction<Session | null>>;
   loadSessions: () => Promise<void>;
+  selectedSkillId?: string | null;
+  onClearSkill?: () => void;
 }
 
-export function useChat({ currentSession, setCurrentSession, loadSessions }: UseChatOptions) {
+export function useChat({ 
+  currentSession, 
+  setCurrentSession, 
+  loadSessions,
+  selectedSkillId,
+  onClearSkill
+}: UseChatOptions) {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +47,18 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
     e?.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage = inputValue.trim();
+    const originalUserMessage = inputValue.trim();
+    let userMessageForApi = originalUserMessage;
+
+    // Apply skill prompt for API call if selected
+    if (selectedSkillId) {
+      const skillPrompt = t(`skills.prompts.${selectedSkillId}`);
+      if (skillPrompt) {
+        userMessageForApi = `${skillPrompt}\n${originalUserMessage}`;
+      }
+      onClearSkill?.();
+    }
+
     setInputValue('');
     setIsLoading(true);
 
@@ -48,7 +67,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
 
     const tempUserMsg: Message = {
       id: `temp-user-${Date.now()}`,
-      content: userMessage,
+      content: originalUserMessage, // Use original message for UI
       role: 'user',
       timestamp: new Date().toISOString(),
     };
@@ -67,7 +86,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
       if (!prev) {
         return {
           id: '',
-          title: userMessage.slice(0, 20),
+          title: originalUserMessage.slice(0, 20),
           messages: [tempUserMsg, tempAiMsg],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -86,7 +105,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
       })) || [];
 
       await chatApi.chatStream(
-        [...messageHistory, { content: userMessage, role: 'user' }],
+        [...messageHistory, { content: userMessageForApi, role: 'user' }],
         currentSession?.id,
         (chunk) => {
           accumulatedContent += chunk;
@@ -115,7 +134,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
             return {
               ...prev,
               id: data.session_id,
-              title: shouldUpdateTitle ? userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '') : prev.title,
+              title: shouldUpdateTitle ? originalUserMessage.slice(0, 20) + (originalUserMessage.length > 20 ? '...' : '') : prev.title,
               messages: prev.messages.map(m =>
                 m.id === tempAiMsgId ? { ...m, content: data.full_content, id: `ai-${Date.now()}` } : m
               ),
@@ -143,7 +162,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, currentSession, setCurrentSession, loadSessions, t]);
+  }, [inputValue, isLoading, currentSession, setCurrentSession, loadSessions, t, selectedSkillId, onClearSkill]);
 
   // 复制消息
   const copyToClipboard = useCallback((text: string, id: string) => {

@@ -63,3 +63,5 @@ agent/data/knowledge/
 agent/._____temp/
 agent/.lock/
 agent/data/agents.db
+# Root data
+data/

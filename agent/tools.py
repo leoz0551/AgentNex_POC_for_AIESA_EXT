@@ -1,5 +1,5 @@
 """
-自定义工具定义模块
+Custom Tool Definitions Module
 """
 
 import os
@@ -27,27 +27,27 @@ except ImportError:
 
 @tool
 def get_current_time() -> str:
-    """获取当前时间"""
+    """Get the current local time."""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 @tool
 def calculate(expression: str) -> str:
     """
-    计算数学表达式
+    Calculate mathematical expressions.
     
     Args:
-        expression: 数学表达式，如 "2 + 3 * 4"
+        expression: Mathematical expression, e.g., "2 + 3 * 4"
     """
     try:
         # 安全计算简单数学表达式
         allowed_chars = set("0123456789+-*/().% ")
         if not all(c in allowed_chars for c in expression):
-            return "错误：表达式包含不允许的字符"
+            return "Error: Expression contains forbidden characters"
         result = eval(expression)
-        return f"计算结果: {result}"
+        return f"Calculation result: {result}"
     except Exception as e:
-        return f"计算错误: {str(e)}"
+        return f"Calculation error: {str(e)}"
 
 
 # ==================== 笔记工具 ====================
@@ -55,29 +55,29 @@ def calculate(expression: str) -> str:
 @tool
 def save_note(run_context: RunContext, title: str, content: str) -> str:
     """
-    保存笔记到用户记忆中
+    Save a note to user memory.
     
     Args:
-        title: 笔记标题
-        content: 笔记内容
+        title: Note title
+        content: Note content
     """
     try:
         user_id = run_context.user_id or "default"
         note_file = KNOWLEDGE_DIR / f"note_{user_id}_{title}.txt"
         with open(note_file, "w", encoding="utf-8") as f:
-            f.write(f"# {title}\n\n{content}\n\n创建时间: {datetime.now()}")
-        return f"笔记 '{title}' 已保存"
+            f.write(f"# {title}\n\n{content}\n\nCreated at: {datetime.now()}")
+        return f"Note '{title}' saved successfully"
     except Exception as e:
-        return f"保存笔记失败: {str(e)}"
+        return f"Failed to save note: {str(e)}"
 
 
 @tool
 def search_notes(run_context: RunContext, query: str) -> str:
     """
-    搜索用户笔记
+    Search user notes.
     
     Args:
-        query: 搜索关键词
+        query: Search keywords
     """
     try:
         user_id = run_context.user_id or "default"
@@ -86,12 +86,12 @@ def search_notes(run_context: RunContext, query: str) -> str:
             with open(note_file, "r", encoding="utf-8") as f:
                 content = f.read()
                 if query.lower() in content.lower():
-                    results.append(f"文件: {note_file.name}\n{content[:200]}...")
+                    results.append(f"File: {note_file.name}\n{content[:200]}...")
         if results:
             return "\n\n---\n\n".join(results)
-        return f"未找到包含 '{query}' 的笔记"
+        return f"No notes found containing '{query}'"
     except Exception as e:
-        return f"搜索失败: {str(e)}"
+        return f"Search failed: {str(e)}"
 
 
 # ==================== 知识库搜索工具 ====================
@@ -109,13 +109,14 @@ def set_knowledge_instance(knowledge):
 @tool
 def search_knowledge_base(query: str) -> str:
     """
-    搜索知识库中的内容。当用户询问关于已上传文档、知识库或特定主题的问题时，使用此工具搜索相关内容。
+    Search content in the knowledge base. Use this tool when users ask questions about uploaded documents, 
+    knowledge base content, or specific topics.
 
     Args:
-        query: 搜索查询，用于在知识库中查找相关内容
+        query: Search query for finding relevant content in the knowledge base
     """
     if _knowledge_instance is None:
-        return "【知识库搜索结果】知识库未初始化。"
+        return "[Knowledge Base] Error: Knowledge base not initialized."
     
     try:
         logger.info(f"Searching knowledge base for: {query}")
@@ -123,29 +124,29 @@ def search_knowledge_base(query: str) -> str:
         logger.info(f"Search results: {results}")
 
         if not results:
-            return "【知识库搜索结果】未找到相关内容。"
+            return "[Knowledge Base] No relevant content found."
 
-        # 格式化搜索结果
+        # Format search results
         formatted_results = []
         for i, result in enumerate(results, 1):
             if isinstance(result, dict):
                 content = result.get("content", result.get("chunk", ""))
-                source = result.get("metadata", {}).get("filename", result.get("metadata", {}).get("source", "未知来源"))
-                formatted_results.append(f"【结果 {i}】来源: {source}\n{content[:500]}...")
+                source = result.get("metadata", {}).get("filename", result.get("metadata", {}).get("source", "Unknown"))
+                formatted_results.append(f"[Result {i}] Source: {source}\n{content[:500]}...")
             elif hasattr(result, 'content'):
-                # agno Document 对象
+                # agno Document object
                 content = result.content
-                name = getattr(result, 'name', '未知来源')
-                formatted_results.append(f"【结果 {i}】来源: {name}\n{content[:500]}...")
+                name = getattr(result, 'name', 'Unknown')
+                formatted_results.append(f"[Result {i}] Source: {name}\n{content[:500]}...")
             else:
-                formatted_results.append(f"【结果 {i}】\n{str(result)[:500]}...")
+                formatted_results.append(f"[Result {i}]\n{str(result)[:500]}...")
 
-        return f"【知识库搜索结果】找到 {len(results)} 条相关内容：\n\n" + "\n\n---\n\n".join(formatted_results)
+        return f"[Knowledge Base Results] Found {len(results)} relevant items:\n\n" + "\n\n---\n\n".join(formatted_results)
     except Exception as e:
         logger.error(f"[KNOWLEDGE SEARCH] Error: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        return "【知识库搜索结果】搜索失败，请稍后重试。"
+        return "[Knowledge Base Error] Search failed. Please try again later."
 
 
 # ==================== 网络搜索工具 ====================
@@ -153,20 +154,21 @@ def search_knowledge_base(query: str) -> str:
 @tool
 def web_search_tavily(query: str, max_results: int = 5) -> str:
     """
-    使用 Tavily API 进行网络搜索。当用户询问需要从互联网获取最新信息的问题时，使用此工具。
+    Perform a web search using the Tavily API. Use this tool when users ask questions requiring 
+    latest information from the internet.
     
     Args:
-        query: 搜索查询
-        max_results: 最大返回结果数，默认为 5
+        query: Search query
+        max_results: Maximum number of results to return (default is 5)
     """
     if not TAVILY_AVAILABLE:
-        return "【网络搜索结果】网络搜索功能不可用，请确保已安装 tavily-python 库。"
+        return "[Web Search Result] Web search functionality is unavailable."
     
     try:
         # 获取 API 密钥
         api_key = os.environ.get("TAVILY_API_KEY")
         if not api_key:
-            return "【网络搜索结果】Tavily API 密钥未配置，请在 .env 文件中设置 TAVILY_API_KEY。"
+            return "[Web Search Result] Tavily API key is not configured."
         
         # 创建 Tavily 客户端
         tavily_client = TavilyClient(api_key=api_key)
@@ -180,9 +182,9 @@ def web_search_tavily(query: str, max_results: int = 5) -> str:
             max_results=max_results
         )
         
-        # 格式化结果
+        # Format results
         if not response.get("results"):
-            return "【网络搜索结果】未找到相关的网络搜索结果。"
+            return "[Web Search Result] No relevant web search results found."
         
         # 包含 AI 生成的答案（如果有）
         answer = response.get("answer", "")
@@ -199,24 +201,45 @@ def web_search_tavily(query: str, max_results: int = 5) -> str:
             content = result.get("content", "")[:300] + "..." if len(result.get("content", "")) > 300 else result.get("content", "")
             relevance_score = result.get("score", 0)
             
-            results_text += f"\n【结果 {i}】(相关性: {relevance_score:.2f})\n"
-            results_text += f"标题: {title}\n"
+            results_text += f"\n[Result {i}] (Score: {relevance_score:.2f})\n"
+            results_text += f"Title: {title}\n"
             results_text += f"URL: {url}\n"
-            results_text += f"内容: {content}\n"
+            results_text += f"Content: {content}\n"
         
-        return f"【网络搜索结果】搜索完成：\n\n" + results_text
+        return f"[Web Search Results] Search completed:\n\n" + results_text
         
     except Exception as e:
         logger.error(f"[TAVILY SEARCH] Error: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        return f"【网络搜索结果】网络搜索失败: {str(e)}"
+        return f"[Web Search Result] Web search failed: {str(e)}"
 
 
-# ==================== 工具列表 ====================
+# ==================== PPT 生成工具 ====================
+
+@tool
+def generate_ppt(topic: str) -> str:
+    """
+    Generate a PPT outline and download link based on the provided topic or content.
+    
+    Args:
+        topic: The topic or main content for the PPT
+    """
+    try:
+        logger.info(f"Generating PPT for: {topic}")
+        # 模拟生成过程
+        mock_download_url = "https://download.lenovo.com/pccbbs/mobiles_pdf/x250_ug_en.pdf"
+        # 返回中立的格式，让 Agent 根据用户语言进行翻译和呈现
+        return f"PPT_GENERATION_SUCCESS\nTopic: {topic}\nDownload Link: [Download the PPT]({mock_download_url})"
+    except Exception as e:
+        logger.error(f"[PPT GENERATE] Error: {e}")
+        return f"PPT_GENERATION_FAILED: {str(e)}"
+
+
+# ==================== Tools List ====================
 
 def get_all_tools():
-    """获取所有工具列表"""
+    """Get the list of all available tools"""
     return [
         get_current_time,
         calculate,
@@ -224,4 +247,5 @@ def get_all_tools():
         search_notes,
         search_knowledge_base,
         web_search_tavily,
+        generate_ppt,
     ]

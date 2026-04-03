@@ -66,6 +66,11 @@ def classify_intent(user_message: str) -> str:
     """
     msg_lower = user_message.lower()
     
+    # PPT generation keywords
+    ppt_keywords = ["ppt", "slide", "presentation", "powerpoint", "生成ppt", "制作ppt", "演示文稿", "大纲"]
+    if any(kw in msg_lower for kw in ppt_keywords):
+        return "ppt_generation"
+
     # Knowledge base query keywords
     knowledge_keywords = ["knowledge base", "document", "uploaded", "file", "content", "information", "rag", "vector",
                           "知识库", "文档", "上传", "资料", "根据", "文件", "内容", "信息"]
@@ -109,22 +114,27 @@ def build_dynamic_instructions(user_message: str) -> List[str]:
         tool_instructions = load_prompt_template("tool_use")
         instructions.extend(tool_instructions)
         logger.info(f"Added {len(tool_instructions)} tool-specific instructions")
+    elif intent == "ppt_generation":
+        ppt_instructions = load_prompt_template("ppt_generation")
+        # For PPT generation, we also need tool use instructions
+        tool_instructions = load_prompt_template("tool_use")
+        instructions.extend(tool_instructions)
+        instructions.extend(ppt_instructions)
+        logger.info(f"Added {len(ppt_instructions)} PPT-specific instructions")
     elif intent == "fallback_strategy":
         fallback_instructions = load_prompt_template("fallback_strategy")
         instructions.extend(fallback_instructions)
         logger.info(f"Added {len(fallback_instructions)} fallback-strategy instructions")
     
-    # If no instructions were loaded, fall back to default instructions
-    if not instructions:
-        logger.warning("No instructions loaded from templates, falling back to default.")
-        instructions = [
-            "You are an intelligent assistant that can help users complete various tasks.",
-            "You can use tools to get time, perform calculations, save and search notes.",
-            "When users ask questions about uploaded documents, knowledge base content, or specific topics, be sure to use the search_knowledge_base tool to search the knowledge base.",
-            "If the user mentions a knowledge base or uploaded files, be sure to search the knowledge base first before answering.",
-            "If the user's question involves knowledge base content, please search the knowledge base.",
-            "Remember user preferences and important information for use in subsequent conversations.",
-            "Always communicate in the same language as the user. If the user asks in English, you must answer in English; if the user asks in Chinese, you must answer in Chinese. Maintain language consistency throughout the conversation, do not switch languages midway.",
-        ]
+    # Append a final, forceful language consistency reminder at the very end
+    # This ensures the model sees this as the most recent and authoritative instruction
+    language_reminder = [
+        "Language Consistency Requirement (CRITICAL):",
+        "1. You MUST respond in the EXACT SAME language used by the user in their core request.",
+        "2. If the user's message starts with a technical prefix (e.g., '请根据以下内容生成 PPT 大纲：') but the user's own text is in English, you MUST respond in English.",
+        "3. Never switch languages midway through a conversation.",
+        "4. This language rule overrides all other formatting or tool-specific instructions."
+    ]
+    instructions.extend(language_reminder)
     
     return instructions
