@@ -44,11 +44,11 @@ def _is_ppt_modification_request(user_message: str) -> bool:
     return has_ppt_ref and has_modify_action
 
 
-def _try_save_ppt_outline(session_id: str, ai_response: str) -> None:
+def _try_save_ppt_outline(user_agent, session_id: str, ai_response: str) -> None:
     """
     After each AI response, check if it's a complete PPT generation
     (contains a download link AND slide content). If so, save the
-    outline to the session's dedicated `last_ppt_outline` slot.
+    outline to the agent's native SQLite session_state.
     """
     has_download_link = bool(_PPT_DOWNLOAD_MARKER.search(ai_response))
     slide_matches = _PPT_SLIDE_PATTERN.findall(ai_response)
@@ -58,8 +58,11 @@ def _try_save_ppt_outline(session_id: str, ai_response: str) -> None:
         # Extract content BEFORE the download link as the outline
         parts = re.split(r"\[Download the PPT\]", ai_response, flags=re.IGNORECASE)
         outline = parts[0].strip() if parts else ai_response
-        session_service.save_ppt_outline(session_id, outline)
-        logger.info(f"Auto-saved PPT outline to session {session_id}.")
+        try:
+            user_agent.update_session_state({"last_ppt_outline": outline}, session_id=session_id)
+            logger.info(f"Auto-saved PPT outline to agno session_state for session {session_id}.")
+        except Exception as e:
+            logger.error(f"Failed to save PPT outline to session_state: {e}")
 
 
 # ==================== Stream Generator ====================
@@ -73,6 +76,21 @@ def generate_stream_content(
 ):
     """生成流式响应内容"""
     try:
+        # 1. Create a "peek" agent just to read the session state (since create_agent_for_request needs the state)
+        # agno handles loading from SQLite automatically via add_history_to_context=True
+        peek_agent = create_agent_for_request(user_message, user_id, session_id, web_search_enabled)
+        
+        # 2. Check if we need to retrieve a saved PPT outline
+        ppt_context = None
+        if _is_ppt_modification_request(user_message):
+            session_state = peek_agent.get_session_state(session_id=session_id) or {}
+            ppt_context = session_state.get("last_ppt_outline")
+            if ppt_context:
+                logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
+            else:
+                logger.info("PPT modification detected but no saved outline found in session_state.")
+        
+        # 3. Create the actual agent with the extracted ppt_context
         user_agent = create_agent_for_request(
             user_message, user_id, session_id, web_search_enabled, ppt_context
         )
@@ -108,7 +126,7 @@ def generate_stream_content(
         session_service.add_message(session_id, ai_msg)
 
         # Auto-save PPT outline if this response contains a full PPT
-        _try_save_ppt_outline(session_id, full_content)
+        _try_save_ppt_outline(user_agent, session_id, full_content)
 
         yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content})}\n\n"
 
@@ -136,14 +154,18 @@ async def chat(request: ChatRequest):
         session = session_service.get_or_create(request.session_id)
         session.user_id = user_id
 
-        # Retrieve saved PPT outline if this is a modification request
+        # 1. Peek at session state using a temporary agent
+        peek_agent = create_agent_for_request(user_message, user_id, session.id, request.web_search_enabled)
+        
+        # 2. Retrieve saved PPT outline if this is a modification request
         ppt_context = None
         if _is_ppt_modification_request(user_message):
-            ppt_context = session_service.get_ppt_outline(session.id)
+            session_state = peek_agent.get_session_state(session_id=session.id) or {}
+            ppt_context = session_state.get("last_ppt_outline")
             if ppt_context:
-                logger.info(f"PPT modification detected: injecting saved outline ({len(ppt_context)} chars).")
+                logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
             else:
-                logger.info("PPT modification detected but no saved outline found in session.")
+                logger.info("PPT modification detected but no saved outline found in session_state.")
 
         user_msg = Message(content=user_message, role="user")
         session_service.add_message(session.id, user_msg)
@@ -158,7 +180,7 @@ async def chat(request: ChatRequest):
         session_service.add_message(session.id, ai_msg)
 
         # Auto-save PPT outline if response contains a complete PPT
-        _try_save_ppt_outline(session.id, ai_content)
+        _try_save_ppt_outline(user_agent, session.id, ai_content)
 
         return ChatResponse(
             content=ai_content,
@@ -189,14 +211,18 @@ async def chat_stream(request: ChatRequest):
     session = session_service.get_or_create(request.session_id)
     session.user_id = user_id
 
-    # Retrieve saved PPT outline if this is a modification request
+    # 1. Peek at session state using a temporary agent
+    peek_agent = create_agent_for_request(user_message, user_id, session.id, request.web_search_enabled)
+    
+    # 2. Retrieve saved PPT outline if this is a modification request
     ppt_context = None
     if _is_ppt_modification_request(user_message):
-        ppt_context = session_service.get_ppt_outline(session.id)
+        session_state = peek_agent.get_session_state(session_id=session.id) or {}
+        ppt_context = session_state.get("last_ppt_outline")
         if ppt_context:
-            logger.info(f"PPT modification detected: injecting saved outline ({len(ppt_context)} chars).")
+            logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
         else:
-            logger.info("PPT modification detected but no saved outline found in session.")
+            logger.info("PPT modification detected but no saved outline found in session_state.")
 
     user_msg = Message(content=user_message, role="user")
     session_service.add_message(session.id, user_msg)

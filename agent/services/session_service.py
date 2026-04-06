@@ -108,22 +108,6 @@ class SessionService:
                     return (session, msg)
         return None
 
-    def save_ppt_outline(self, session_id: str, outline: str) -> bool:
-        """Save the most recently generated PPT outline to the session."""
-        session = self.get(session_id)
-        if not session:
-            return False
-        session.last_ppt_outline = outline
-        logger.info(f"Saved PPT outline ({len(outline)} chars) to session {session_id}")
-        return True
-
-    def get_ppt_outline(self, session_id: str) -> Optional[str]:
-        """Retrieve the most recently saved PPT outline for a session."""
-        session = self.get(session_id)
-        if not session:
-            return None
-        return session.last_ppt_outline
-
 
 # 全局单例
 session_service = SessionService()

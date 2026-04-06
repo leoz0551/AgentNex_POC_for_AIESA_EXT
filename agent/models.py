@@ -47,7 +47,6 @@ class Session(BaseModel):
     title: str = "新对话"
     user_id: str = "default"
     messages: List[Message] = []
-    last_ppt_outline: Optional[str] = None  # Stores the most recently generated PPT outline
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
