@@ -112,7 +112,7 @@ def get_memory_tools() -> List:
 
 # ==================== Agent Creation Functions ====================
 
-def create_agent_for_request(user_message: str, user_id: str = "default") -> Agent:
+def create_agent_for_request(user_message: str, user_id: str = "default", web_search_enabled: bool = True) -> Agent:
     """
     Create an Agent instance for a specific request, using dynamically generated instructions.
     
@@ -124,11 +124,20 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
     Args:
         user_message: User message for intent classification and dynamic instruction generation
         user_id: User ID
+        web_search_enabled: Whether to enable web search tool
     
     Returns:
         Configured Agent instance
     """
-    dynamic_instructions = build_dynamic_instructions(user_message)
+    dynamic_instructions = build_dynamic_instructions(user_message, web_search_enabled)
+    
+    # 获取所有工具并根据开关过滤
+    available_tools = get_all_tools()
+    if not web_search_enabled:
+        # 导入工具对象进行直接比对，避免装饰器包装后的对象缺少 __name__ 属性
+        from tools import web_search_tavily
+        available_tools = [t for t in available_tools if t != web_search_tavily]
+        logger.info(f"Web search is disabled for user {user_id}. Tool 'web_search_tavily' removed.")
     
     return Agent(
         model=OpenAIChat(
@@ -150,7 +159,7 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
         knowledge=knowledge,
         search_knowledge=True,
         # Tool configuration
-        tools=get_all_tools(),
+        tools=available_tools,
         # Instruction configuration
         instructions=dynamic_instructions,
         user_id=user_id,

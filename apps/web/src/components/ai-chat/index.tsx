@@ -110,6 +110,7 @@ export function AIChat() {
     loadSessions,
     selectedSkillId,
     onClearSkill: () => setSelectedSkillId(null),
+    webSearchEnabled,
   });
 
   // 加载面板数据

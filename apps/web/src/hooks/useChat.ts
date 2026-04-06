@@ -9,6 +9,7 @@ interface UseChatOptions {
   loadSessions: () => Promise<void>;
   selectedSkillId?: string | null;
   onClearSkill?: () => void;
+  webSearchEnabled?: boolean;
 }
 
 export function useChat({ 
@@ -16,7 +17,8 @@ export function useChat({
   setCurrentSession, 
   loadSessions,
   selectedSkillId,
-  onClearSkill
+  onClearSkill,
+  webSearchEnabled = true,
 }: UseChatOptions) {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
@@ -107,6 +109,7 @@ export function useChat({
       await chatApi.chatStream(
         [...messageHistory, { content: userMessageForApi, role: 'user' }],
         currentSession?.id,
+        webSearchEnabled,
         (chunk) => {
           accumulatedContent += chunk;
           setCurrentSession(prev => {
@@ -162,7 +165,7 @@ export function useChat({
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, currentSession, setCurrentSession, loadSessions, t, selectedSkillId, onClearSkill]);
+  }, [inputValue, isLoading, currentSession, setCurrentSession, loadSessions, t, selectedSkillId, onClearSkill, webSearchEnabled]);
 
   // 复制消息
   const copyToClipboard = useCallback((text: string, id: string) => {

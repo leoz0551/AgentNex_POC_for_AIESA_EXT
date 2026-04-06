@@ -20,6 +20,7 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = "default"
     stream: bool = False
+    web_search_enabled: bool = True
 
 
 class ChatResponse(BaseModel):

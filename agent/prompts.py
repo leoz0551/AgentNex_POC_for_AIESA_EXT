@@ -89,12 +89,13 @@ def classify_intent(user_message: str) -> str:
 
 # ==================== Dynamic Instruction Building ====================
 
-def build_dynamic_instructions(user_message: str) -> List[str]:
+def build_dynamic_instructions(user_message: str, web_search_enabled: bool = True) -> List[str]:
     """
     Dynamically build the final system instruction list based on user message.
     
     Args:
         user_message: User's input message
+        web_search_enabled: Whether web search is enabled
     
     Returns:
         Dynamically assembled instruction list
@@ -126,6 +127,19 @@ def build_dynamic_instructions(user_message: str) -> List[str]:
         instructions.extend(fallback_instructions)
         logger.info(f"Added {len(fallback_instructions)} fallback-strategy instructions")
     
+    # Handle Web Search toggle constraints
+    if not web_search_enabled:
+        web_search_constraints = [
+            "CRITICAL CONSTRAINT (WEB SEARCH):",
+            "1. Web search functionality is currently DISABLED by the user.",
+            "2. DO NOT attempt to use the `web_search_tavily` tool, as it has been removed from your toolset.",
+            "3. If you cannot find information in the knowledge base, do NOT suggest searching the web.",
+            "4. Inform the user that web search is disabled if you are unable to answer from local documents and internal knowledge."
+        ]
+        # Append to the beginning of specialized instructions to override fallback priorities
+        instructions.extend(web_search_constraints)
+        logger.info("Added web search disability constraints to instructions")
+
     # Append a final, forceful language consistency reminder at the very end
     # This ensures the model sees this as the most recent and authoritative instruction
     language_reminder = [

@@ -1,13 +1,31 @@
 {
   "documents": [
     {
-      "id": "8e1fce7b-5a7d-49cf-a179-ea01ed8ca652",
+      "id": "d36440f6-08cb-40c7-a324-24e57c1bf051",
+      "filename": "Gemini_PPT_Workflow.pdf",
+      "file_path": "C:\\Users\\ssuu\\Documents\\Lenovowork\\dev\\AgentNex_POC\\agent\\data\\knowledge\\d36440f6-08cb-40c7-a324-24e57c1bf051_Gemini_PPT_Workflow.pdf",
+      "type": ".pdf",
+      "user_id": "default",
+      "chunk_count": 0,
+      "created_at": "2026-04-06T18:21:09.467790"
+    },
+    {
+      "id": "dc0e70bb-ff60-4ab4-9cc8-b1f28e920a66",
+      "filename": "SolutionGuide_ThinkPadX9_AEwWin11.pdf",
+      "file_path": "C:\\Users\\ssuu\\Documents\\Lenovowork\\dev\\AgentNex_POC\\agent\\data\\knowledge\\dc0e70bb-ff60-4ab4-9cc8-b1f28e920a66_SolutionGuide_ThinkPadX9_AEwWin11.pdf",
+      "type": ".pdf",
+      "user_id": "default",
+      "chunk_count": 0,
+      "created_at": "2026-04-06T18:21:27.874099"
+    },
+    {
+      "id": "da2ceb58-f4fa-4bef-8332-5c4c052855e3",
       "filename": "Lenovo Threat Model Templates.docx",
-      "file_path": "data\\knowledge\\8e1fce7b-5a7d-49cf-a179-ea01ed8ca652_Lenovo Threat Model Templates.docx",
+      "file_path": "C:\\Users\\ssuu\\Documents\\Lenovowork\\dev\\AgentNex_POC\\agent\\data\\knowledge\\da2ceb58-f4fa-4bef-8332-5c4c052855e3_Lenovo Threat Model Templates.docx",
       "type": ".docx",
       "user_id": "default",
       "chunk_count": 0,
-      "created_at": "2026-04-02T16:36:28.434938"
+      "created_at": "2026-04-06T18:21:38.023629"
     }
   ]
 }
