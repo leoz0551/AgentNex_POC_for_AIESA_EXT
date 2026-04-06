@@ -121,7 +121,31 @@ def search_knowledge_base(query: str) -> str:
     try:
         logger.info(f"Searching knowledge base for: {query}")
         results = _knowledge_instance.search(query=query)
-        logger.info(f"Search results: {results}")
+        
+        # 简化日志输出，避免打印巨大的向量
+        if results:
+            simplified_results = []
+            for r in results:
+                # 提取内容预览
+                content_preview = ""
+                if hasattr(r, 'content'):
+                    content_preview = r.content[:50]
+                elif isinstance(r, dict):
+                    content_preview = (r.get('content') or r.get('chunk') or "")[:50]
+                
+                # 提取元数据 (排除 embedding)
+                meta = {}
+                if hasattr(r, 'meta_data'):
+                    meta = {k: v for k, v in (r.meta_data or {}).items() if k != 'embedding'}
+                elif hasattr(r, 'metadata'):
+                    meta = {k: v for k, v in (r.metadata or {}).items() if k != 'embedding'}
+                elif isinstance(r, dict):
+                    meta = {k: v for k, v in r.get('metadata', {}).items() if k != 'embedding'}
+                
+                simplified_results.append({"content": content_preview + "...", "metadata": meta})
+            logger.info(f"Search completed: {len(results)} items found. Results snippet: {simplified_results}")
+        else:
+            logger.info("Search completed: No items found.")
 
         if not results:
             return "[Knowledge Base] No relevant content found."

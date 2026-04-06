@@ -297,7 +297,7 @@ async def upload_knowledge(
 
             # 验证
             test_search = knowledge.search(query=filename[:20])
-            logger.info(f"Verification search result: {test_search}")
+            logger.info(f"Verification search results count: {len(test_search) if test_search else 0}")
 
         except Exception as insert_error:
             logger.error(f"Failed to insert into knowledge base: {insert_error}")

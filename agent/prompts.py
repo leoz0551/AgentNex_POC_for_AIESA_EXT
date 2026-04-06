@@ -67,7 +67,7 @@ def classify_intent(user_message: str) -> str:
     msg_lower = user_message.lower()
     
     # PPT generation keywords
-    ppt_keywords = ["ppt", "slide", "presentation", "powerpoint", "生成ppt", "制作ppt", "演示文稿", "大纲"]
+    ppt_keywords = ["ppt", "slide", "presentation", "powerpoint", "生成ppt", "制作ppt", "演示文稿", "大纲", "修改", "替换", "更新", "change", "replace", "update"]
     if any(kw in msg_lower for kw in ppt_keywords):
         return "ppt_generation"
 
