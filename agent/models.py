@@ -80,6 +80,38 @@ class MessageFeedback(BaseModel):
     feedback: str
 
 
+class DetailedFeedback(BaseModel):
+    message_id: str
+    user_id: Optional[str] = "default"
+    type: str = "dislike"
+    category: Optional[str] = None
+    what_went_wrong: Optional[str] = None
+    additional_content: Optional[str] = None
+    attachment_path: Optional[str] = None
+    status: str = "Open"
+    user_prompt: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+
+class FeedbackItem(BaseModel):
+    id: int
+    message_id: str
+    session_id: str
+    user_prompt: str
+    type: str  # 'like', 'dislike'
+    category: Optional[str] = None
+    status: str
+    timestamp: datetime
+    comment_count: int = 0
+
+
+class FeedbackStats(BaseModel):
+    total: int
+    likes: int
+    dislikes: int
+    comments: int
+
+
 # ==================== 知识库模型 ====================
 
 class KnowledgeDocument(BaseModel):

@@ -19,6 +19,10 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const originalMessageCountRef = useRef(0);
 
+  // 反馈对话框状态
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [activeFeedbackMessageId, setActiveFeedbackMessageId] = useState<string | null>(null);
+
   const messages = currentSession?.messages || [];
 
   // 滚动到底部
@@ -117,7 +121,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
               id: data.session_id,
               title: shouldUpdateTitle ? userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '') : prev.title,
               messages: prev.messages.map(m =>
-                m.id === tempAiMsgId ? { ...m, content: data.full_content, id: `ai-${Date.now()}` } : m
+                m.id === tempAiMsgId ? { ...m, content: data.full_content, id: data.message_id || `ai-${Date.now()}` } : m
               ),
             };
           });
@@ -165,10 +169,39 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
           ),
         };
       });
+
+      // 如果是点踩，打开详细反馈对话框
+      if (feedback === 'dislike') {
+        setActiveFeedbackMessageId(messageId);
+        setFeedbackDialogOpen(true);
+      }
     } catch (error) {
       console.error('Feedback error:', error);
     }
   }, [setCurrentSession]);
+
+  // 提交详细反馈
+  const submitDetailedFeedback = useCallback(async (data: any) => {
+    if (!activeFeedbackMessageId) return;
+    
+    const formData = new FormData();
+    formData.append('category', data.category);
+    formData.append('what_went_wrong', data.whatWentWrong);
+    if (data.additionalContent) {
+      formData.append('additional_content', data.additionalContent);
+    }
+    if (data.attachment) {
+      formData.append('attachment', data.attachment);
+    }
+
+    await chatApi.submitDetailedFeedback(activeFeedbackMessageId, formData);
+  }, [activeFeedbackMessageId]);
+
+  // 关闭反馈对话框
+  const closeFeedbackDialog = useCallback(() => {
+    setFeedbackDialogOpen(false);
+    setActiveFeedbackMessageId(null);
+  }, []);
 
   // 重新生成
   const handleRegenerate = useCallback(async () => {
@@ -210,5 +243,9 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
     copyToClipboard,
     handleFeedback,
     handleRegenerate,
+    feedbackDialogOpen,
+    activeFeedbackMessageId,
+    submitDetailedFeedback,
+    closeFeedbackDialog,
   };
 }
