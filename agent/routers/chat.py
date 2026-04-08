@@ -49,7 +49,7 @@ def generate_stream_content(user_message: str, session_id: str, user_id: str = "
         ai_msg = Message(content=full_content, role="assistant")
         session_service.add_message(session_id, ai_msg)
         
-        yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content})}\n\n"
+        yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content, 'message_id': ai_msg.id})}\n\n"
         
     except Exception as e:
         logger.error(f"Stream error: {e}")
