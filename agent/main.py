@@ -74,6 +74,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Session-Id"],  # Required for frontend JS to read this custom response header
 )
 
 # ==================== 注册路由 ====================

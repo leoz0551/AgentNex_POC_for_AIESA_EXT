@@ -112,23 +112,87 @@ def get_memory_tools() -> List:
 
 # ==================== Agent Creation Functions ====================
 
-def create_agent_for_request(user_message: str, user_id: str = "default") -> Agent:
+def create_agent_for_request(
+    user_message: str,
+    user_id: str = "default",
+    session_id: Optional[str] = None,
+    web_search_enabled: bool = True,
+    ppt_context: Optional[str] = None,
+) -> Agent:
     """
     Create an Agent instance for a specific request, using dynamically generated instructions.
-    
-    According to agno official documentation best practices:
-    - update_memory_on_run=True: Enable automatic memory extraction
-    - memory_manager: Custom memory management
-    - add_memories_to_context=True: Automatically add memories to context
     
     Args:
         user_message: User message for intent classification and dynamic instruction generation
         user_id: User ID
+        session_id: Current session ID (for history persistence)
+        web_search_enabled: Whether to enable web search tool
+        ppt_context: If set, the previous PPT outline is injected into the system prompt
+                     as a locked structure that the model must preserve.
     
     Returns:
         Configured Agent instance
     """
-    dynamic_instructions = build_dynamic_instructions(user_message)
+    # When a saved PPT outline is present, bypass the standard intent flow entirely.
+    # The standard ppt_generation.md mandates a full KB search, which causes the model
+    # to replace the entire outline with fresh KB results. Instead, we use a targeted
+    # "PPT EDIT MODE" that restricts KB search to only the new content being added.
+    if ppt_context:
+        logger.info(f"Entering PPT EDIT MODE: overriding standard intent flow with targeted editing instructions.")
+        ppt_edit_instructions = get_base_instructions() + [
+            "",
+            "## PPT MODIFICATION MODE (CURRENTLY ACTIVE)",
+            "The user wants to modify an EXISTING PPT outline. Follow these rules STRICTLY:",
+            "",
+            "### Your Steps:",
+            "1. READ the LOCKED PPT OUTLINE below completely and carefully.",
+            "2. IDENTIFY exactly what the user wants to change (e.g., add slide 4, replace slide 2).",
+            "3. SEARCH (only if needed): If the requested change requires new specific information",
+            "   (e.g., 'add a slide about Lenovo company history'), use search_knowledge_base or",
+            "   web_search_tavily ONLY for that new information. Do NOT re-search for existing slides.",
+            "4. CONSTRUCT the COMPLETE new outline:",
+            "   - Copy ALL existing slides exactly as they appear in the LOCKED OUTLINE below",
+            "   - Add/Replace ONLY the slide(s) the user explicitly specified",
+            "5. CALL generate_ppt(topic) to produce a new download link.",
+            "6. OUTPUT the full modified outline, then references, then the download link.",
+            "",
+            "### CRITICAL RULES:",
+            "- NEVER regenerate slides that are NOT mentioned in the user's request.",
+            "- NEVER use KB search results to replace or 'improve' existing slides.",
+            "- The existing slides are FINAL. Only the specifically requested slide changes.",
+            "",
+            "=" * 60,
+            "LOCKED PPT OUTLINE (COPY THESE SLIDES AS-IS INTO YOUR OUTPUT):",
+            "=" * 60,
+            ppt_context[:4000],
+            "=" * 60,
+            "END OF LOCKED PPT OUTLINE",
+            "=" * 60,
+            "",
+            "### Output Format Rules (MUST FOLLOW):",
+            "- Step 5 is MANDATORY: You MUST call the generate_ppt(topic) tool to get the real download link.",
+            "- After calling the tool, use the EXACT link returned by the tool as your download link.",
+            "- The download link MUST be the VERY LAST line of your response. Nothing after it.",
+            "- DO NOT write placeholder text like '下载链接正在生成中' or 'generating download link'.",
+            "- DO NOT write any closing remarks, tips, or summaries after the download link.",
+            "",
+            "Language Consistency Requirement (CRITICAL):",
+            "1. You MUST respond in the EXACT SAME language used by the user in their core request.",
+            "2. Never switch languages midway through a conversation.",
+            "3. This language rule overrides all other instructions.",
+        ]
+        dynamic_instructions = ppt_edit_instructions
+    else:
+        # Standard flow: classify intent and build instructions normally
+        dynamic_instructions = build_dynamic_instructions(user_message, web_search_enabled)
+
+    # 获取所有工具并根据开关过滤
+    available_tools = get_all_tools()
+    if not web_search_enabled:
+        # 导入工具对象进行直接比对，避免装饰器包装后的对象缺少 __name__ 属性
+        from tools import web_search_tavily
+        available_tools = [t for t in available_tools if t != web_search_tavily]
+        logger.info(f"Web search is disabled for user {user_id}. Tool 'web_search_tavily' removed.")
     
     return Agent(
         model=OpenAIChat(
@@ -146,14 +210,16 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
         update_memory_on_run=True,  # Automatically extract and save memories
         memory_manager=get_memory_manager(),  # Custom memory manager
         add_memories_to_context=True,  # Automatically inject memories into context
+        add_history_to_context=True,  # Load conversation history from db by session_id
         # Knowledge base configuration
         knowledge=knowledge,
         search_knowledge=True,
         # Tool configuration
-        tools=get_all_tools(),
+        tools=available_tools,
         # Instruction configuration
         instructions=dynamic_instructions,
         user_id=user_id,
+        session_id=session_id,
     )
 
 

@@ -2,8 +2,10 @@
 聊天相关路由
 """
 
+import re
 import json
 import logging
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -16,17 +18,92 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-def generate_stream_content(user_message: str, session_id: str, user_id: str = "default"):
+# ==================== PPT Context Helpers ====================
+
+# Keywords indicating a PPT modification intent
+_PPT_MODIFY_KEYWORDS = [
+    "修改", "替换", "更新", "添加", "重新生成", "再加", "加上", "删除", "重做",
+    "replace", "update", "change", "add", "modify", "regenerate", "revise", "redo",
+]
+
+# PPT reference keywords (to confirm this is about a PPT)
+_PPT_REF_KEYWORDS = ["ppt", "slide", "大纲", "presentation", "幻灯片"]
+
+# Marker for a complete PPT generation response (contains download link)
+_PPT_DOWNLOAD_MARKER = re.compile(r"\[Download the PPT\]|download.*?\.pdf", re.IGNORECASE)
+
+# Pattern to detect a PPT outline (at least 2 slide markers in content)
+_PPT_SLIDE_PATTERN = re.compile(r"第\s*\d+\s*[页张]|slide\s*\d+", re.IGNORECASE)
+
+
+def _is_ppt_modification_request(user_message: str) -> bool:
+    """Detect if the user is asking to modify an existing PPT."""
+    msg_lower = user_message.lower()
+    has_ppt_ref = any(kw in msg_lower for kw in _PPT_REF_KEYWORDS)
+    has_modify_action = any(kw in msg_lower for kw in _PPT_MODIFY_KEYWORDS)
+    return has_ppt_ref and has_modify_action
+
+
+def _try_save_ppt_outline(user_agent, session_id: str, ai_response: str) -> None:
+    """
+    After each AI response, check if it's a complete PPT generation
+    (contains a download link AND slide content). If so, save the
+    outline to the agent's native SQLite session_state.
+    """
+    has_download_link = bool(_PPT_DOWNLOAD_MARKER.search(ai_response))
+    slide_matches = _PPT_SLIDE_PATTERN.findall(ai_response)
+    has_multiple_slides = len(slide_matches) >= 2
+
+    if has_download_link and has_multiple_slides:
+        # Extract content BEFORE the download link as the outline
+        parts = re.split(r"\[Download the PPT\]", ai_response, flags=re.IGNORECASE)
+        outline = parts[0].strip() if parts else ai_response
+        try:
+            user_agent.update_session_state({"last_ppt_outline": outline}, session_id=session_id)
+            logger.info(f"Auto-saved PPT outline to agno session_state for session {session_id}.")
+        except Exception as e:
+            logger.error(f"Failed to save PPT outline to session_state: {e}")
+
+
+# ==================== Stream Generator ====================
+
+def generate_stream_content(
+    user_message: str,
+    session_id: str,
+    user_id: str = "default",
+    web_search_enabled: bool = True,
+    ppt_context: Optional[str] = None,
+):
     """生成流式响应内容"""
     try:
-        user_agent = create_agent_for_request(user_message, user_id)
-        stream = user_agent.run(user_message, user_id=user_id, stream=True)
+        # 1. Create a "peek" agent just to read the session state (since create_agent_for_request needs the state)
+        # agno handles loading from SQLite automatically via add_history_to_context=True
+        peek_agent = create_agent_for_request(user_message, user_id, session_id, web_search_enabled)
         
+        # 2. Check if we need to retrieve a saved PPT outline
+        ppt_context = None
+        if _is_ppt_modification_request(user_message):
+            session_state = peek_agent.get_session_state(session_id=session_id) or {}
+            ppt_context = session_state.get("last_ppt_outline")
+            if ppt_context:
+                logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
+            else:
+                logger.info("PPT modification detected but no saved outline found in session_state.")
+        
+        # 3. Create the actual agent with the extracted ppt_context
+        user_agent = create_agent_for_request(
+            user_message, user_id, session_id, web_search_enabled, ppt_context
+        )
+        stream = user_agent.run(
+            user_message,
+            user_id=user_id,
+            session_id=session_id,
+            stream=True,
+        )
+
         full_content = ""
         for chunk in stream:
             content = ""
-            
-            # 兼容不同版本的 agno/phidata 以及不同模型的返回结构
             if isinstance(chunk, str):
                 content = chunk
             elif isinstance(chunk, dict):
@@ -37,17 +114,19 @@ def generate_stream_content(user_message: str, session_id: str, user_id: str = "
                 content = chunk.delta
             elif hasattr(chunk, "message") and isinstance(chunk.message, str):
                 content = chunk.message
-                
+
             if content:
-                # 累加实际的文本片段
                 full_content += content
                 yield f"data: {json.dumps({'content': content, 'done': False})}\n\n"
             else:
                 logger.debug(f"Skipped unknown or empty chunk: {type(chunk)} - {chunk}")
-        
-        # 保存 AI 回复到会话
+
+        # Save AI reply to session
         ai_msg = Message(content=full_content, role="assistant")
         session_service.add_message(session_id, ai_msg)
+
+        # Auto-save PPT outline if this response contains a full PPT
+        _try_save_ppt_outline(user_agent, session_id, full_content)
         
         yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content, 'message_id': ai_msg.id})}\n\n"
         
@@ -56,41 +135,60 @@ def generate_stream_content(user_message: str, session_id: str, user_id: str = "
         yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
 
+# ==================== Routes ====================
+
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """处理聊天请求（非流式）"""
     try:
         if not request.messages:
             raise HTTPException(status_code=400, detail="No messages provided")
-        
+
         user_message = request.messages[-1].content if request.messages else ""
         if not user_message:
             raise HTTPException(status_code=400, detail="Empty user message")
-        
+
         user_id = request.user_id or "default"
         logger.info(f"Processing message from user {user_id}: {user_message}")
-        
+
         session = session_service.get_or_create(request.session_id)
         session.user_id = user_id
+
+        # 1. Peek at session state using a temporary agent
+        peek_agent = create_agent_for_request(user_message, user_id, session.id, request.web_search_enabled)
         
+        # 2. Retrieve saved PPT outline if this is a modification request
+        ppt_context = None
+        if _is_ppt_modification_request(user_message):
+            session_state = peek_agent.get_session_state(session_id=session.id) or {}
+            ppt_context = session_state.get("last_ppt_outline")
+            if ppt_context:
+                logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
+            else:
+                logger.info("PPT modification detected but no saved outline found in session_state.")
+
         user_msg = Message(content=user_message, role="user")
         session_service.add_message(session.id, user_msg)
-        
-        # 使用动态创建的 Agent
-        user_agent = create_agent_for_request(user_message, user_id)
-        response = user_agent.run(user_message, user_id=user_id)
-        ai_content = response.content if hasattr(response, 'content') else str(response)
-        
+
+        user_agent = create_agent_for_request(
+            user_message, user_id, session.id, request.web_search_enabled, ppt_context
+        )
+        response = user_agent.run(user_message, user_id=user_id, session_id=session.id)
+        ai_content = response.content if hasattr(response, "content") else str(response)
+
         ai_msg = Message(content=ai_content, role="assistant")
         session_service.add_message(session.id, ai_msg)
-        
+
+        # Auto-save PPT outline if response contains a complete PPT
+        _try_save_ppt_outline(user_agent, session.id, ai_content)
+
         return ChatResponse(
             content=ai_content,
             role="assistant",
             session_id=session.id,
-            message_id=ai_msg.id
+            message_id=ai_msg.id,
         )
-        
+
     except Exception as e:
         error_msg = f"Error processing chat request: {str(e)}"
         logger.error(error_msg)
@@ -102,26 +200,39 @@ async def chat_stream(request: ChatRequest):
     """处理聊天请求（流式输出）"""
     if not request.messages:
         raise HTTPException(status_code=400, detail="No messages provided")
-    
+
     user_message = request.messages[-1].content if request.messages else ""
     if not user_message:
         raise HTTPException(status_code=400, detail="Empty user message")
-    
+
     user_id = request.user_id or "default"
     logger.info(f"Processing stream message from user {user_id}: {user_message}")
-    
+
     session = session_service.get_or_create(request.session_id)
     session.user_id = user_id
+
+    # 1. Peek at session state using a temporary agent
+    peek_agent = create_agent_for_request(user_message, user_id, session.id, request.web_search_enabled)
     
+    # 2. Retrieve saved PPT outline if this is a modification request
+    ppt_context = None
+    if _is_ppt_modification_request(user_message):
+        session_state = peek_agent.get_session_state(session_id=session.id) or {}
+        ppt_context = session_state.get("last_ppt_outline")
+        if ppt_context:
+            logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
+        else:
+            logger.info("PPT modification detected but no saved outline found in session_state.")
+
     user_msg = Message(content=user_message, role="user")
     session_service.add_message(session.id, user_msg)
-    
+
     return StreamingResponse(
-        generate_stream_content(user_message, session.id, user_id),
+        generate_stream_content(user_message, session.id, user_id, request.web_search_enabled, ppt_context),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Session-Id": session.id
-        }
+            "X-Session-Id": session.id,
+        },
     )

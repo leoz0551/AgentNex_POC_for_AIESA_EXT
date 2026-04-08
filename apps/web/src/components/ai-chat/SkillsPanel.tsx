@@ -1,36 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Brain, 
-  Search, 
-  FileText, 
-  Presentation, 
-  Globe, 
-  FileSearch, 
-  Mic,
   Pin,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ALL_SKILLS } from '../../constants/skills';
 
-interface Skill {
-  id: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-}
-
-interface SkillsPanelProps {
-  onSkillSelect: (skillId: string, prompt: string) => void;
-}
-
-const allSkills: Skill[] = [
-  { id: 'deepThinking', icon: Brain, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
-  { id: 'deepResearch', icon: Search, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-  { id: 'readDoc', icon: FileText, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-  { id: 'meetingMinutes', icon: Mic, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 'webSearch', icon: Globe, color: 'text-cyan-500', bgColor: 'bg-cyan-500/10' },
-  { id: 'docSearch', icon: FileSearch, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
-  { id: 'pptGenerate', icon: Presentation, color: 'text-pink-500', bgColor: 'bg-pink-500/10' },
-];
+const allSkills = ALL_SKILLS;
 
 const PINNED_SKILLS_KEY = 'legendagent_pinned_skills';
 
@@ -38,6 +13,10 @@ const PINNED_SKILLS_KEY = 'legendagent_pinned_skills';
 const dispatchPinnedChange = () => {
   window.dispatchEvent(new CustomEvent('pinned-skills-change'));
 };
+
+interface SkillsPanelProps {
+  onSkillSelect: (skillId: string, prompt: string) => void;
+}
 
 export function SkillsPanel({ onSkillSelect }: SkillsPanelProps) {
   const { t } = useTranslation();

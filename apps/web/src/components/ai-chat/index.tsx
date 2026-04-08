@@ -34,6 +34,7 @@ export function AIChat() {
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false);
   const [skillsPanelWidth, setSkillsPanelWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [brandSettingsOpen, setBrandSettingsOpen] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
 
@@ -115,6 +116,9 @@ export function AIChat() {
     currentSession,
     setCurrentSession,
     loadSessions,
+    selectedSkillId,
+    onClearSkill: () => setSelectedSkillId(null),
+    webSearchEnabled,
   });
 
   // 加载面板数据
@@ -136,8 +140,19 @@ export function AIChat() {
     setPanelView(panel);
   }, []);
 
+  // 处理技能选择
+  const handleSkillSelect = useCallback((skillId: string, _prompt: string) => {
+    setSelectedSkillId(skillId);
+    // 重置输入框，让用户自己输入内容
+    setInputValue(''); 
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  }, [setInputValue, textareaRef]);
+
   // 处理提示词选择 - 自动发送消息
   const handlePromptSelect = useCallback((prompt: string) => {
+    setSelectedSkillId(null); // 选择提示词时清除已选技能
     setInputValue(prompt);
     setPanelView('none'); // 关闭面板
     // 短暂延迟后自动提交
@@ -329,23 +344,44 @@ export function AIChat() {
                 />
               )}
             </div>
+          ) : messages.length === 0 ? (
+            <WelcomeScreen 
+              onSkillSelect={handleSkillSelect}
+              onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
+              brandConfig={styleConfig}
+            />
+          ) : (
+            <MessageList
+              messages={messages}
+              isLoading={isLoading}
+              copiedId={copiedId}
+              messagesEndRef={messagesEndRef}
+              onCopy={copyToClipboard}
+              onRegenerate={handleRegenerate}
+              onFeedback={handleFeedback}
+            />
+          )}
+        </div>
 
-            {/* Input Area */}
-            <div className="relative z-10">
-              <InputArea 
-                inputValue={inputValue}
-                setInputValue={setInputValue}
-                isLoading={isLoading}
-                inputFocused={inputFocused}
-                setInputFocused={setInputFocused}
-                textareaRef={textareaRef}
-                fileInputRef={fileInputRef}
-                onSubmit={handleSubmit}
-                onFileUpload={handleFileUpload}
-                styleConfig={styleConfig}
-              />
-            </div>
-          </main>
+        {/* Input Area */}
+        <div className="relative z-10">
+          <InputArea
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            isLoading={isLoading}
+            inputFocused={inputFocused}
+            setInputFocused={setInputFocused}
+            textareaRef={textareaRef}
+            fileInputRef={fileInputRef}
+            onSubmit={handleSubmit}
+            onFileUpload={handleFileUpload}
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+            onClearSkill={() => setSelectedSkillId(null)}
+            styleConfig={styleConfig}
+          />
+        </div>
+      </main>
         </>
       )}
 

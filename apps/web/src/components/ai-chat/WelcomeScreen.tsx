@@ -1,32 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Brain, Search, FileText, Mic, ChevronRight, Globe, FileSearch, Presentation, Wrench } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { ChevronRight, Wrench, Brain } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SuggestedPrompt } from '../../types';
 import type { StyleConfig } from '../../hooks/useStyleConfig';
 import { LogoGenerator } from './LogoGenerator';
+import { ALL_SKILLS } from '../../constants/skills';
 
 interface WelcomeScreenProps {
-  onSelectPrompt: (text: string) => void;
+  onSkillSelect: (skillId: string, prompt: string) => void;
   onOpenSkillsPanel: () => void;
   brandConfig: StyleConfig;
 }
 
 const PINNED_SKILLS_KEY = 'legendagent_pinned_skills';
 
-const skillConfigs: Record<string, { icon: LucideIcon; iconBg: string }> = {
-  deepThinking: { icon: Brain, iconBg: 'bg-violet-500/20' },
-  deepResearch: { icon: Search, iconBg: 'bg-blue-500/20' },
-  readDoc: { icon: FileText, iconBg: 'bg-emerald-500/20' },
-  meetingMinutes: { icon: Mic, iconBg: 'bg-orange-500/20' },
-  webSearch: { icon: Globe, iconBg: 'bg-cyan-500/20' },
-  docSearch: { icon: FileSearch, iconBg: 'bg-amber-500/20' },
-  pptGenerate: { icon: Presentation, iconBg: 'bg-pink-500/20' },
-};
-
 const defaultSkills = ['deepThinking', 'deepResearch', 'readDoc', 'meetingMinutes'];
 
-export function WelcomeScreen({ onSelectPrompt, onOpenSkillsPanel, brandConfig }: WelcomeScreenProps) {
+export function WelcomeScreen({ onSkillSelect, onOpenSkillsPanel, brandConfig }: WelcomeScreenProps) {
   const { t, i18n } = useTranslation();
   const [displaySkills, setDisplaySkills] = useState<string[]>(defaultSkills);
 
@@ -81,15 +70,22 @@ export function WelcomeScreen({ onSelectPrompt, onOpenSkillsPanel, brandConfig }
     };
   }, []);
 
-  const suggestedPrompts: SuggestedPrompt[] = displaySkills.map(skillId => {
-    const config = skillConfigs[skillId] || { icon: Brain, iconBg: 'bg-violet-500/20' };
+  const suggestedPrompts = displaySkills.map(skillId => {
+    const skill = ALL_SKILLS.find(s => s.id === skillId) || ALL_SKILLS[0];
     return {
-      icon: config.icon,
+      id: skill.id,
+      icon: skill.icon,
       text: t(`welcome.prompts.${skillId}`),
       desc: t(`welcome.prompts.${skillId}Desc`),
-      iconBg: config.iconBg,
+      color: skill.color,
+      bgColor: skill.bgColor,
     };
   });
+
+  const handleSkillClick = (skillId: string) => {
+    const prompt = t(`skills.prompts.${skillId}`);
+    onSkillSelect(skillId, prompt);
+  };
 
   // 使用样式配置的颜色
   const primaryColor = brandConfig.colors.primary;
@@ -160,7 +156,7 @@ export function WelcomeScreen({ onSelectPrompt, onOpenSkillsPanel, brandConfig }
         {suggestedPrompts.map((prompt, index) => (
           <button
             key={index}
-            onClick={() => onSelectPrompt(prompt.text)}
+            onClick={() => handleSkillClick(prompt.id)}
             className="group relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm p-3 md:p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02]"
             style={{ 
               animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
@@ -184,7 +180,7 @@ export function WelcomeScreen({ onSelectPrompt, onOpenSkillsPanel, brandConfig }
                 className="flex-shrink-0 p-1.5 md:p-3 rounded-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                 style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 20%, transparent)` }}
               >
-                <prompt.icon className="h-4 w-4 md:h-5 md:w-5" color={primaryColor} />
+                <prompt.icon className="h-4 w-4 md:h-5 md:w-5" />
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-foreground truncate text-xs md:text-base">{prompt.text}</p>
