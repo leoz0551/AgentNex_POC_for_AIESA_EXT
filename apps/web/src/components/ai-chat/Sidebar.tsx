@@ -22,6 +22,7 @@ interface SidebarProps {
   onDeleteSession: (id: string) => void;
   onToggleDark: () => void;
   onOpenPanel: (panel: PanelView) => void;
+  onOpenFeedbackBoard: () => void;
   onOpenStyleConfig: () => void;
   onClose: () => void;
 }
@@ -41,6 +42,7 @@ export const Sidebar = memo(function Sidebar({
   onDeleteSession,
   onToggleDark,
   onOpenPanel,
+  onOpenFeedbackBoard,
   onOpenStyleConfig,
   onClose,
 }: SidebarProps) {
@@ -212,9 +214,9 @@ export const Sidebar = memo(function Sidebar({
                   <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </button>
                 <button 
-                  onClick={() => window.open('https://github.com/LegendAgent/LegendAgent/issues', '_blank')} 
+                  onClick={onOpenFeedbackBoard} 
                   className="p-1.5 md:p-2 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors dark:bg-accent/30 dark:hover:bg-accent/60" 
-                  title={t('sidebar.feedback') || 'Feedback'}
+                  title={t('sidebar.feedback') || 'Feedback Board'}
                 >
                   <ClipboardEdit className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </button>

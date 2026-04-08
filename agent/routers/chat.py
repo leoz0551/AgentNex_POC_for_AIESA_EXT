@@ -127,9 +127,9 @@ def generate_stream_content(
 
         # Auto-save PPT outline if this response contains a full PPT
         _try_save_ppt_outline(user_agent, session_id, full_content)
-
-        yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content})}\n\n"
-
+        
+        yield f"data: {json.dumps({'content': '', 'done': True, 'full_content': full_content, 'message_id': ai_msg.id})}\n\n"
+        
     except Exception as e:
         logger.error(f"Stream error: {e}")
         yield f"data: {json.dumps({'error': str(e)})}\n\n"

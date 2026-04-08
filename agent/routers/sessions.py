@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 
 from models import (
     SessionCreate, SessionUpdate, SessionSummary, SessionDetail,
-    ChatResponse, Message, MessageFeedback
+    ChatResponse, Message, MessageFeedback, FeedbackStats, FeedbackItem
 )
 from services.session_service import session_service
 from services.agent_service import create_agent_for_request
@@ -91,7 +91,86 @@ async def message_feedback(message_id: str, request: MessageFeedback):
     
     _, msg = result
     msg.feedback = request.feedback
+    
+    # 获取原始问题
+    user_prompt = "Unknown"
+    session, _ = result
+    for i, m in enumerate(session.messages):
+        if m.id == message_id and i > 0:
+            user_prompt = session.messages[i-1].content
+            break
+
+    # 如果是点赞，自动记录到详细反馈表以便统计
+    if request.feedback == "like":
+        try:
+            feedback_service.save_detailed_feedback(
+                message_id=message_id,
+                feedback_type="like",
+                user_id="default", # TODO: get from session
+                user_prompt=user_prompt
+            )
+        except Exception as e:
+            logger.error(f"Failed to auto-record like feedback: {e}")
+            
     return {"status": "ok", "message": "Feedback recorded"}
+
+
+@router.get("/feedback/stats", response_model=FeedbackStats)
+async def get_feedback_stats(user_id: str = "default"):
+    """获取反馈统计"""
+    stats = feedback_service.get_feedback_stats(user_id)
+    return stats
+
+
+@router.get("/feedback/list", response_model=Dict[str, Any])
+async def get_feedback_list(user_id: str = "default", status: str = "All", keyword: str = ""):
+    """获取反馈列表"""
+    items = feedback_service.get_feedback_list(user_id, status, keyword)
+    return {"feedbacks": items}
+
+
+from fastapi import File, UploadFile, Form
+from typing import Optional
+from services.feedback_service import feedback_service
+
+@router.post("/messages/{message_id}/detailed-feedback")
+async def submit_detailed_feedback(
+    message_id: str,
+    category: str = Form(...),
+    what_went_wrong: str = Form(...),
+    additional_content: Optional[str] = Form(None),
+    attachment: Optional[UploadFile] = File(None)
+):
+    """提交详细反馈（包含问题、类别和附件）"""
+    try:
+        # 确认消息存在
+        result = session_service.find_message_by_id(message_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Message not found")
+            
+        # 获取原始问题
+        user_prompt = "Unknown"
+        session, _ = result
+        for i, m in enumerate(session.messages):
+            if m.id == message_id and i > 0:
+                user_prompt = session.messages[i-1].content
+                break
+
+        feedback = feedback_service.save_detailed_feedback(
+            message_id=message_id,
+            category=category,
+            what_went_wrong=what_went_wrong,
+            additional_content=additional_content,
+            attachment=attachment,
+            user_prompt=user_prompt
+        )
+        
+        return {"status": "ok", "feedback": feedback.model_dump()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting detailed feedback: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{session_id}/regenerate")

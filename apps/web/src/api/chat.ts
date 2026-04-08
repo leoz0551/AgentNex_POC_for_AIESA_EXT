@@ -37,7 +37,7 @@ export const chatApi = {
     sessionId: string | undefined,
     webSearchEnabled: boolean,
     onChunk: (content: string) => void,
-    onDone: (data: { session_id: string; full_content: string }) => void,
+    onDone: (data: { session_id: string; full_content: string; message_id: string }) => void,
     onError: (error: string) => void
   ): Promise<void> {
     const res = await fetch(`${API_BASE}/chat/stream`, {
@@ -81,10 +81,11 @@ export const chatApi = {
               if (data.error) {
                 onError(data.error);
               } else if (data.done) {
-                onDone({
-                  session_id: res.headers.get('X-Session-Id') || '',
-                  full_content: data.full_content,
-                });
+                  onDone({
+                    session_id: res.headers.get('X-Session-Id') || '',
+                    full_content: data.full_content,
+                    message_id: data.message_id || '',
+                  });
               } else if (data.content) {
                 onChunk(data.content);
               }
@@ -101,11 +102,23 @@ export const chatApi = {
 
   // 消息反馈
   async feedback(messageId: string, feedback: 'like' | 'dislike'): Promise<void> {
-    await fetch(`${API_BASE}/messages/${messageId}/feedback`, {
+    await fetch(`${API_BASE}/sessions/messages/${messageId}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ feedback }),
     });
+  },
+
+  // 提交详细反馈
+  async submitDetailedFeedback(messageId: string, formData: FormData): Promise<void> {
+    const res = await fetch(`${API_BASE}/sessions/messages/${messageId}/detailed-feedback`, {
+      method: 'POST',
+      body: formData, // FormData 会被自动设置为 multipart/form-data
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || 'Feedback submission failed');
+    }
   },
 
   // 重新生成
@@ -119,5 +132,21 @@ export const chatApi = {
     });
     if (!res.ok) throw new Error('Regenerate error');
     return res.json();
+  },
+
+  // 获取反馈统计
+  async getFeedbackStats(): Promise<{ total: number; likes: number; dislikes: number; comments: number }> {
+    const res = await fetch(`${API_BASE}/sessions/feedback/stats`);
+    if (!res.ok) throw new Error('Failed to fetch feedback stats');
+    return res.json();
+  },
+
+  // 获取反馈列表
+  async getFeedbackList(status = 'All', keyword = ''): Promise<any[]> {
+    const query = new URLSearchParams({ status, keyword }).toString();
+    const res = await fetch(`${API_BASE}/sessions/feedback/list?${query}`);
+    if (!res.ok) throw new Error('Failed to fetch feedback list');
+    const data = await res.json();
+    return data.feedbacks || [];
   },
 };

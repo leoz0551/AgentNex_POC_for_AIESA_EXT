@@ -31,8 +31,7 @@ if not OPENROUTER_API_KEY and not DASHSCOPE_API_KEY:
 
 # ==================== 路径配置 ====================
 
-BASE_DIR = Path(__file__).resolve().parent
-
+BASE_DIR = Path(__file__).parent.absolute()
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
