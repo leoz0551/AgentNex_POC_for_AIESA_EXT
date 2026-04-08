@@ -140,11 +140,10 @@ export function AIChat() {
     setPanelView(panel);
   }, []);
 
-  // 处理技能选择
-  const handleSkillSelect = useCallback((skillId: string, _prompt: string) => {
+  // 143:   // 处理技能选择
+  const handleSkillSelect = useCallback((skillId: string, prompt: string) => {
     setSelectedSkillId(skillId);
-    // 重置输入框，让用户自己输入内容
-    setInputValue(''); 
+    setInputValue(prompt);
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
@@ -160,14 +159,6 @@ export function AIChat() {
       handleSubmit();
     }, 100);
   }, [setInputValue, handleSubmit]);
-
-  // 处理技能选择
-  const handleSkillSelect = useCallback((_skillId: string, prompt: string) => {
-    setInputValue(prompt);
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 100);
-  }, [setInputValue, textareaRef]);
 
   // 拖拽调整 Skills Panel 宽度
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -328,7 +319,7 @@ export function AIChat() {
                 </div>
               ) : messages.length === 0 ? (
                 <WelcomeScreen 
-                  onSelectPrompt={setInputValue} 
+                  onSkillSelect={handleSkillSelect}
                   onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
                   brandConfig={styleConfig}
                 />
@@ -344,27 +335,9 @@ export function AIChat() {
                 />
               )}
             </div>
-          ) : messages.length === 0 ? (
-            <WelcomeScreen 
-              onSkillSelect={handleSkillSelect}
-              onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
-              brandConfig={styleConfig}
-            />
-          ) : (
-            <MessageList
-              messages={messages}
-              isLoading={isLoading}
-              copiedId={copiedId}
-              messagesEndRef={messagesEndRef}
-              onCopy={copyToClipboard}
-              onRegenerate={handleRegenerate}
-              onFeedback={handleFeedback}
-            />
-          )}
-        </div>
 
-        {/* Input Area */}
-        <div className="relative z-10">
+            {/* Input Area */}
+            <div className="relative z-10">
           <InputArea
             inputValue={inputValue}
             setInputValue={setInputValue}
