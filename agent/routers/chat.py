@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-def generate_stream_content(user_message: str, session_id: str, user_id: str = "default"):
+def generate_stream_content(user_message: str, session_id: str, user_id: str = "default", chat_board_mode: bool = False):
     """生成流式响应内容"""
     try:
-        user_agent = create_agent_for_request(user_message, user_id)
-        stream = user_agent.run(user_message, user_id=user_id, stream=True)
+        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=chat_board_mode, session_id=session_id)
+        stream = user_agent.run(user_message, user_id=user_id, session_id=session_id, stream=True)
         
         full_content = ""
         for chunk in stream:
@@ -77,8 +77,8 @@ async def chat(request: ChatRequest):
         session_service.add_message(session.id, user_msg)
         
         # 使用动态创建的 Agent
-        user_agent = create_agent_for_request(user_message, user_id)
-        response = user_agent.run(user_message, user_id=user_id)
+        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=request.chat_board_mode, session_id=session.id)
+        response = user_agent.run(user_message, user_id=user_id, session_id=session.id)
         ai_content = response.content if hasattr(response, 'content') else str(response)
         
         ai_msg = Message(content=ai_content, role="assistant")
@@ -117,7 +117,7 @@ async def chat_stream(request: ChatRequest):
     session_service.add_message(session.id, user_msg)
     
     return StreamingResponse(
-        generate_stream_content(user_message, session.id, user_id),
+        generate_stream_content(user_message, session.id, user_id, chat_board_mode=request.chat_board_mode),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

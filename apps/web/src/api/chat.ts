@@ -37,12 +37,13 @@ export const chatApi = {
     sessionId: string | undefined,
     onChunk: (content: string) => void,
     onDone: (data: { session_id: string; full_content: string }) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    chatBoardMode: boolean = false
   ): Promise<void> {
     const res = await fetch(`${API_BASE}/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, session_id: sessionId, user_id: USER_ID }),
+      body: JSON.stringify({ messages, session_id: sessionId, user_id: USER_ID, chat_board_mode: chatBoardMode }),
     });
     if (!res.ok) {
       const error = await res.json();

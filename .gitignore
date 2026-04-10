@@ -58,8 +58,11 @@ ENV/
 agent/.env
 agent/.legned_agent_env/
 agent/sentence-transformers/
-agent/data/chromadb/
-agent/data/knowledge/
 agent/._____temp/
 agent/.lock/
-agent/data/agents.db
+
+# Local Data
+*.db
+data/
+agent/data/
+agent/agent_data.db

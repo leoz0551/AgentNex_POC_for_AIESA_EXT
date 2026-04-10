@@ -78,24 +78,34 @@ def classify_intent(user_message: str) -> str:
     if any(kw in msg_lower for kw in tool_keywords):
         return "tool_use"
     
+    # ChatBI keywords
+    chatbi_keywords = ["统计", "分析", "报表", "趋势", "访问", "数据", "表格", "图表", "echarts", "chart", "table", "analyze", "statistics", "trend"]
+    if any(kw in msg_lower for kw in chatbi_keywords):
+        return "chatbi_strategy"
+
     # Default to multi-layer fallback strategy
     return "fallback_strategy"
 
 
 # ==================== Dynamic Instruction Building ====================
 
-def build_dynamic_instructions(user_message: str) -> List[str]:
+def build_dynamic_instructions(user_message: str, force_chatbi: bool = False) -> List[str]:
     """
     Dynamically build the final system instruction list based on user message.
     
     Args:
         user_message: User's input message
+        force_chatbi: Whether to force the ChatBI strategy
     
     Returns:
         Dynamically assembled instruction list
     """
-    intent = classify_intent(user_message)
-    logger.info(f"Classified intent for message '{user_message[:30]}...': {intent}")
+    if force_chatbi:
+        intent = "chatbi_strategy"
+        logger.info(f"ChatBoard mode ACTIVE: Forcing intent to {intent}")
+    else:
+        intent = classify_intent(user_message)
+        logger.info(f"Classified intent for message '{user_message[:30]}...': {intent}")
     
     # Always load base system instructions
     instructions = load_prompt_template("base_system")
@@ -113,6 +123,10 @@ def build_dynamic_instructions(user_message: str) -> List[str]:
         fallback_instructions = load_prompt_template("fallback_strategy")
         instructions.extend(fallback_instructions)
         logger.info(f"Added {len(fallback_instructions)} fallback-strategy instructions")
+    elif intent == "chatbi_strategy":
+        chatbi_instructions = load_prompt_template("chatbi_strategy")
+        instructions.extend(chatbi_instructions)
+        logger.info(f"Added {len(chatbi_instructions)} chatbi-strategy instructions")
     
     # If no instructions were loaded, fall back to default instructions
     if not instructions:

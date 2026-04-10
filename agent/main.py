@@ -33,6 +33,7 @@ from routers import (
     memory_router,
     knowledge_router,
     tools_router,
+    data_router,
 )
 from services.session_service import session_service
 
@@ -83,6 +84,7 @@ app.include_router(sessions_router)
 app.include_router(memory_router)
 app.include_router(knowledge_router)
 app.include_router(tools_router)
+app.include_router(data_router, prefix="/api/data", tags=["Data"])
 
 # ==================== 根端点 ====================
 

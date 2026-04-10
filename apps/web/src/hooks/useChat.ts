@@ -15,6 +15,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
+  const [chatBoardMode, setChatBoardMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const originalMessageCountRef = useRef(0);
@@ -136,7 +137,8 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
               ),
             };
           });
-        }
+        },
+        chatBoardMode
       );
     } catch (error) {
       console.error('Chat error:', error);
@@ -210,5 +212,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
     copyToClipboard,
     handleFeedback,
     handleRegenerate,
+    chatBoardMode,
+    setChatBoardMode,
   };
 }

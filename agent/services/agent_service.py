@@ -112,7 +112,7 @@ def get_memory_tools() -> List:
 
 # ==================== Agent Creation Functions ====================
 
-def create_agent_for_request(user_message: str, user_id: str = "default") -> Agent:
+def create_agent_for_request(user_message: str, user_id: str = "default", chat_board_mode: bool = False, session_id: Optional[str] = None) -> Agent:
     """
     Create an Agent instance for a specific request, using dynamically generated instructions.
     
@@ -120,15 +120,17 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
     - update_memory_on_run=True: Enable automatic memory extraction
     - memory_manager: Custom memory management
     - add_memories_to_context=True: Automatically add memories to context
+    - db / session_id: Enable persistent short-term chat history
     
     Args:
         user_message: User message for intent classification and dynamic instruction generation
         user_id: User ID
+        session_id: Session ID for enabling conversational history
     
     Returns:
         Configured Agent instance
     """
-    dynamic_instructions = build_dynamic_instructions(user_message)
+    dynamic_instructions = build_dynamic_instructions(user_message, force_chatbi=chat_board_mode)
     
     return Agent(
         model=OpenAIChat(
@@ -142,15 +144,22 @@ def create_agent_for_request(user_message: str, user_id: str = "default") -> Age
         ),
         markdown=True,
         db=db,
-        # Memory configuration - following agno official best practices
+        # Multi-turn history persistence implementation via native db parameter
+        session_id=session_id,
+        add_history_to_context=True,  # Load conversation history from db by session_id
+        
+        # Memory configuration - following agno official best practices (Semantic Memories)
         update_memory_on_run=True,  # Automatically extract and save memories
         memory_manager=get_memory_manager(),  # Custom memory manager
         add_memories_to_context=True,  # Automatically inject memories into context
+        
         # Knowledge base configuration
         knowledge=knowledge,
         search_knowledge=True,
+        
         # Tool configuration
         tools=get_all_tools(),
+        
         # Instruction configuration
         instructions=dynamic_instructions,
         user_id=user_id,

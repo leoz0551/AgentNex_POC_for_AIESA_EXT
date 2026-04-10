@@ -103,6 +103,8 @@ export function AIChat() {
     copyToClipboard,
     handleFeedback,
     handleRegenerate,
+    chatBoardMode,
+    setChatBoardMode,
   } = useChat({
     currentSession,
     setCurrentSession,
@@ -323,6 +325,8 @@ export function AIChat() {
             onSubmit={handleSubmit}
             onFileUpload={handleFileUpload}
             styleConfig={styleConfig}
+            chatBoardMode={chatBoardMode}
+            setChatBoardMode={setChatBoardMode}
           />
         </div>
       </main>
