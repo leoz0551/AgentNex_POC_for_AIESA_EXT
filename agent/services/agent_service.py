@@ -112,6 +112,7 @@ def get_memory_tools() -> List:
 
 # ==================== Agent Creation Functions ====================
 
+
 def create_agent_for_request(user_message: str, user_id: str = "default", chat_board_mode: bool = False, session_id: Optional[str] = None) -> Agent:
     """
     Create an Agent instance for a specific request, using dynamically generated instructions.
@@ -130,6 +131,7 @@ def create_agent_for_request(user_message: str, user_id: str = "default", chat_b
     Returns:
         Configured Agent instance
     """
+    
     dynamic_instructions = build_dynamic_instructions(user_message, force_chatbi=chat_board_mode)
     
     return Agent(
@@ -152,7 +154,7 @@ def create_agent_for_request(user_message: str, user_id: str = "default", chat_b
         update_memory_on_run=True,  # Automatically extract and save memories
         memory_manager=get_memory_manager(),  # Custom memory manager
         add_memories_to_context=True,  # Automatically inject memories into context
-        
+
         # Knowledge base configuration
         knowledge=knowledge,
         search_knowledge=True,
@@ -163,6 +165,7 @@ def create_agent_for_request(user_message: str, user_id: str = "default", chat_b
         # Instruction configuration
         instructions=dynamic_instructions,
         user_id=user_id,
+        session_id=session_id,
     )
 
 

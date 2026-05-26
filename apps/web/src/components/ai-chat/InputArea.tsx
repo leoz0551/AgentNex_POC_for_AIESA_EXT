@@ -1,9 +1,11 @@
+
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { Send, Upload, Globe, LayoutGrid, RefreshCw, BarChart3, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@workspace/ui/components/button';
 import { languages } from '../../i18n';
 import type { StyleConfig } from '../../hooks/useStyleConfig';
+import { ALL_SKILLS } from '../../constants/skills';
 
 interface InputAreaProps {
   inputValue: string;
@@ -15,6 +17,9 @@ interface InputAreaProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onSubmit: (e?: React.FormEvent) => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSkillSelect?: (skillId: string, prompt: string) => void;
+  selectedSkillId?: string | null;
+  onClearSkill?: () => void;
   styleConfig: StyleConfig;
   chatBoardMode: boolean;
   setChatBoardMode: (mode: boolean) => void;
@@ -30,6 +35,9 @@ export function InputArea({
   fileInputRef,
   onSubmit,
   onFileUpload,
+  onSkillSelect,
+  selectedSkillId,
+  onClearSkill,
   styleConfig,
   chatBoardMode,
   setChatBoardMode,
@@ -68,13 +76,23 @@ export function InputArea({
   return (
     <div className="border-t border-border/40 bg-gradient-to-t from-background/90 to-background/60 backdrop-blur-xl p-3 md:p-4 pb-4 md:pb-6">
       <form onSubmit={onSubmit} className="mx-auto max-w-3xl">
+
         <div className={`relative rounded-lg transition-all duration-500 ${inputFocused ? 'shadow-2xl shadow-violet-500/20 ring-2 ring-violet-500/30 border-violet-500/40' : 'shadow-xl border-border/50 hover:shadow-2xl hover:shadow-violet-500/10'} border bg-background/80 backdrop-blur-xl`}>
           {/* GPT style Input Inner Wrapper */}
           <div className="relative flex items-end p-1.5 md:p-2">
             <button
+              ref={buttonRef}
+              type="button"
+              onClick={() => setShowMenu(!showMenu)}
+              className={`flex items-center gap-2 px-3 h-9 md:h-10 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${showMenu ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30' : 'bg-accent/50 hover:bg-accent text-muted-foreground hover:text-violet-500 dark:bg-accent/30 dark:hover:bg-accent/60'}`}
+            >
+              <SlidersHorizontal className={`h-4 w-4 ${showMenu ? 'text-white' : ''}`} />
+              <span className="text-[13px] font-medium">Skills</span>
+            </button>
+            <button
               type="button"
               onClick={handleUploadClick}
-              className="p-2 md:p-2.5 rounded-lg bg-accent/50 hover:bg-accent transition-all duration-200 text-muted-foreground hover:text-violet-500 hover:scale-105 active:scale-95 cursor-pointer dark:bg-accent/30 dark:hover:bg-accent/60"
+              className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center rounded-lg bg-accent/50 hover:bg-accent transition-all duration-200 text-muted-foreground hover:text-violet-500 hover:scale-105 active:scale-95 cursor-pointer dark:bg-accent/30 dark:hover:bg-accent/60"
             >
               <Upload className="h-4 w-4 md:h-5 md:w-5" />
             </button>
