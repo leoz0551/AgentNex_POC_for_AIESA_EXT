@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-
 # ==================== PPT Context Helpers ====================
 
 # Keywords indicating a PPT modification intent
@@ -67,12 +66,29 @@ def _try_save_ppt_outline(user_agent, session_id: str, ai_response: str) -> None
 
 
 # ==================== Stream Generator ====================
-def generate_stream_content(user_message: str, session_id: str, user_id: str = "default", chat_board_mode: bool = False):
+
+def generate_stream_content(
+    user_message: str,
+    session_id: str,
+    user_id: str = "default",
+    web_search_enabled: bool = True,
+    ppt_context: Optional[str] = None,
+):
     """生成流式响应内容"""
     try:
-        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=chat_board_mode, session_id=session_id)
-        stream = user_agent.run(user_message, user_id=user_id, session_id=session_id, stream=True)
-
+        # 1. Create a "peek" agent just to read the session state (since create_agent_for_request needs the state)
+        # agno handles loading from SQLite automatically via add_history_to_context=True
+        peek_agent = create_agent_for_request(user_message, user_id, session_id, web_search_enabled)
+        
+        # 2. Check if we need to retrieve a saved PPT outline
+        ppt_context = None
+        if _is_ppt_modification_request(user_message):
+            session_state = peek_agent.get_session_state(session_id=session_id) or {}
+            ppt_context = session_state.get("last_ppt_outline")
+            if ppt_context:
+                logger.info(f"PPT modification detected: injecting saved outline from session_state ({len(ppt_context)} chars).")
+            else:
+                logger.info("PPT modification detected but no saved outline found in session_state.")
         
         # 3. Create the actual agent with the extracted ppt_context
         user_agent = create_agent_for_request(
@@ -154,11 +170,12 @@ async def chat(request: ChatRequest):
         user_msg = Message(content=user_message, role="user")
         session_service.add_message(session.id, user_msg)
 
-        # 使用动态创建的 Agent
-        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=request.chat_board_mode, session_id=session.id)
+        user_agent = create_agent_for_request(
+            user_message, user_id, session.id, request.web_search_enabled, ppt_context
+        )
         response = user_agent.run(user_message, user_id=user_id, session_id=session.id)
-        ai_content = response.content if hasattr(response, 'content') else str(response)
-        
+        ai_content = response.content if hasattr(response, "content") else str(response)
+
         ai_msg = Message(content=ai_content, role="assistant")
         session_service.add_message(session.id, ai_msg)
 
@@ -211,8 +228,7 @@ async def chat_stream(request: ChatRequest):
     session_service.add_message(session.id, user_msg)
 
     return StreamingResponse(
-        generate_stream_content(user_message, session.id, user_id, chat_board_mode=request.chat_board_mode),
-
+        generate_stream_content(user_message, session.id, user_id, request.web_search_enabled, ppt_context),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

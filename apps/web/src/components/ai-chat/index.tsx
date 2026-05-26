@@ -109,8 +109,9 @@ export function AIChat() {
     copyToClipboard,
     handleFeedback,
     handleRegenerate,
-    chatBoardMode,
-    setChatBoardMode
+    feedbackDialogOpen,
+    submitDetailedFeedback,
+    closeFeedbackDialog,
   } = useChat({
     currentSession,
     setCurrentSession,
@@ -351,8 +352,6 @@ export function AIChat() {
             selectedSkillId={selectedSkillId}
             onClearSkill={() => setSelectedSkillId(null)}
             styleConfig={styleConfig}
-            chatBoardMode={chatBoardMode}
-            setChatBoardMode={setChatBoardMode}
           />
         </div>
       </main>

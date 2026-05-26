@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check, ChevronDown, ChevronRight } from 'lucide-react';
-import { ChartRenderer } from './visuals/ChartRenderer';
 
 // 按需引入 highlight.js 语言包（减少约 300KB）
 import hljs from 'highlight.js/lib/core';
@@ -73,18 +72,6 @@ function CodeBlock({
         {children}
       </code>
     );
-  }
-  
-  // Intercept json for Echarts
-  if (language === 'json') {
-    try {
-      const parsedData = JSON.parse(codeString);
-      if (parsedData?.type === 'echarts' && parsedData?.config) {
-        return <ChartRenderer config={parsedData.config} />;
-      }
-    } catch(e) {
-      // Not a valid JSON or not an Echarts object, fallback to normal code block
-    }
   }
 
   return (
