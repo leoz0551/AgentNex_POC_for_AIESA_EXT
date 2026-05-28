@@ -162,6 +162,7 @@ def create_agent_for_request(user_message: str, user_id: str = "default", chat_b
         
         # Instruction configuration
         instructions=dynamic_instructions,
+        system_message_role="user",
         user_id=user_id,
     )
 
@@ -194,6 +195,7 @@ def create_base_agent(user_id: str = "default") -> Agent:
         db=db,
         user_id=user_id,
         instructions=base_instructions,
+        system_message_role="user",
         # Do not enable automatic memory updates, for read-only scenarios
         update_memory_on_run=False,
     )
@@ -230,6 +232,7 @@ def create_agent_with_memory_tools(user_id: str = "default") -> Agent:
         db=db,
         user_id=user_id,
         instructions=base_instructions,
+        system_message_role="user",
         # Use explicit memory tools instead of automatic memory
         tools=get_memory_tools(),
         # Disable automatic memory, let Agent manage autonomously through tools

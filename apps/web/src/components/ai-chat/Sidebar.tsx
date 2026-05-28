@@ -1,5 +1,5 @@
 import { useMemo, memo } from 'react';
-import { Plus, MessageSquare, Brain, BookOpen, Search, Trash2, Moon, Sun, ChevronDown, Clock, Settings, X, ClipboardEdit, Sparkles, Workflow } from 'lucide-react';
+import { Plus, MessageSquare, Brain, BookOpen, Search, Trash2, Moon, Sun, ChevronDown, Clock, Settings, X, ClipboardEdit, Sparkles, Workflow, GraduationCap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@workspace/ui/components/button';
 import type { SessionSummary, PanelView } from '../../types';
@@ -67,6 +67,7 @@ export const Sidebar = memo(function Sidebar({
     // { icon: Brain, label: t('sidebar.memory'), count: memoriesCount, key: 'memory', onClick: () => onOpenPanel(panelView === 'memory' ? 'none' : 'memory') },
     { icon: BookOpen, label: t('sidebar.knowledge'), count: knowledgeDocsCount, key: 'knowledge', onClick: () => onOpenPanel(panelView === 'knowledge' ? 'none' : 'knowledge') },
     { icon: Search, label: t('sidebar.tools'), count: webSearchEnabled ? 1 : 0, countLabel: webSearchEnabled ? (i18n.language === 'zh-CN' ? '开' : 'On') : (i18n.language === 'zh-CN' ? '关' : 'Off'), key: 'tools', onClick: () => onOpenPanel(panelView === 'tools' ? 'none' : 'tools') },
+    { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => window.location.href = '/ai-trainer' },
     { icon: Workflow, label: t('sidebar.kb_evol'), key: 'kb_evol', onClick: () => window.open('/kb-evol', '_blank') },
   ], [t, sessions.length, memoriesCount, knowledgeDocsCount, webSearchEnabled, i18n.language, panelView, onOpenPanel]);
 

@@ -94,6 +94,68 @@ export const chatApi = {
     }
   },
 
+  // AI Trainer 专属发送消息（流式）
+  async trainerChatStream(
+    messages: { content: string; role: string }[],
+    sessionId: string | undefined,
+    onChunk: (content: string) => void,
+    onDone: (data: { session_id: string; full_content: string }) => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    const res = await fetch(`${API_BASE}/trainer/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, session_id: sessionId, user_id: USER_ID }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      onError(error.detail || 'Trainer chat error');
+      return;
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      onError('No reader available');
+      return;
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.error) {
+                onError(data.error);
+              } else if (data.done) {
+                onDone({
+                  session_id: res.headers.get('X-Session-Id') || '',
+                  full_content: data.full_content,
+                });
+              } else if (data.content) {
+                onChunk(data.content);
+              }
+            } catch {
+              // 忽略解析错误
+            }
+          }
+        }
+      }
+    } catch (e) {
+      onError(String(e));
+    }
+  },
+
   // 消息反馈
   async feedback(messageId: string, feedback: 'like' | 'dislike'): Promise<void> {
     await fetch(`${API_BASE}/messages/${messageId}/feedback`, {

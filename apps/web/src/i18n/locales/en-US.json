@@ -52,6 +52,7 @@
     "prompts": "Prompts Library",
     "tools": "Web Search",
     "kb_evol": "AI Knowledge Evoluate",
+    "aiTrainer": "AI Trainer",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
     "feedback": "Feedback",
@@ -253,5 +254,19 @@
     "success": "Upload successful",
     "failed": "Upload failed",
     "selectFile": "Select file to upload"
+  },
+  "aiTrainer": {
+    "title": "AI Trainer",
+    "subtitle": "Customer Service Script & KB Training Assistant",
+    "welcome": "Hello! I am your AI Trainer. If you encounter any problems during customer service, feel free to ask me. I will search the knowledge base for the best answers and recommend relevant micro-courses for you to learn.",
+    "agentReplyPrefix": "Regarding your question \"{{query}}\", I found the following relevant guidelines in the knowledge base:\n\n1. **Verify Customer Info**: Verify the customer's device serial number and proof of purchase.\n2. **Soothe Emotions**: Explain the warranty policies patiently for any complaints regarding out-of-warranty repairs.\n3. **Provide Solutions**: If the customer accepts paid repairs, guide them to the nearest service outlet; if they refuse, record it and apply for special care.\n\nPlease maintain professionalism and empathy during communication.",
+    "courseCtaPrefix": "For detailed information, please refer to the micro-course: ",
+    "courseCtaButton": "Micro-course Learning",
+    "backToHome": "Back to Home",
+    "finish": "Finish",
+    "regenerate": "Regenerate",
+    "practice": "Practice",
+    "courseTitle": "Customer Empathy & Expectation Management",
+    "courseContent": "### 1. Course Objectives\nMaster how to effectively soothe customer emotions and reasonably control their expectations under complex complaint scenarios.\n\n### 2. Core Principles\n- **Empathetic Listening**: Do not argue in a rush; let the customer fully release their emotions first.\n- **Restate the Problem**: Restate the customer's pain points in your own words to confirm correct understanding.\n- **Manage Expectations**: Do not make promises beyond your authority; provide clear processing timelines.\n\n### 3. Scenario Scripts Examples\n**Scenario 1: Customer does not understand repair charges**\n*Incorrect script*: \"This is company policy. If it's out of warranty, you must pay.\"\n*Standard script*: \"Mr. Lee, I completely understand how you feel, and device issues can indeed be very troublesome. Your device has exceeded the national standard warranty period. According to our guidelines, we need to charge a certain inspection and repair fee. However, we will arrange for a senior engineer to prioritize your case and resolve it for you as quickly as possible. Would that be acceptable?\"\n\n### 4. Common Pitfalls Warning\n> [!WARNING]\n> Never emphasize \"Listen to me\" or \"You are wrong\" when the customer is emotional.\n> Do not promise \"I will solve it right away\"; instead say \"I will immediately record this as urgent for you.\"\n\n### 5. Post-course Exercise\nAfter reading the above, please click the [Practice] button below to enter the scenario simulation test."
   }
 }

@@ -32,10 +32,10 @@ if not OPENROUTER_API_KEY and not DASHSCOPE_API_KEY:
 # ==================== 路径配置 ====================
 
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-PROMPTS_DIR = Path("prompts")
+PROMPTS_DIR = Path(__file__).parent / "prompts"
 PROMPTS_DIR.mkdir(exist_ok=True)
 
 DB_FILE = DATA_DIR / "agents.db"
