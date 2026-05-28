@@ -51,6 +51,7 @@
     "knowledge": "临时知识库",
     "prompts": "提示词库",
     "tools": "联网搜索",
+    "kb_evol": "AI 知识自动进化",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
     "feedback": "反馈建议",

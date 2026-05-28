@@ -1,13 +1,13 @@
 {
   "documents": [
     {
-      "id": "8e1fce7b-5a7d-49cf-a179-ea01ed8ca652",
-      "filename": "Lenovo Threat Model Templates.docx",
-      "file_path": "data\\knowledge\\8e1fce7b-5a7d-49cf-a179-ea01ed8ca652_Lenovo Threat Model Templates.docx",
-      "type": ".docx",
+      "id": "7df4f3e1-b0e3-485d-a4be-4f32e62e319f",
+      "filename": "OpenClaw 从基础到高阶 2.pdf",
+      "file_path": "data\\knowledge\\7df4f3e1-b0e3-485d-a4be-4f32e62e319f_OpenClaw 从基础到高阶 2.pdf",
+      "type": ".pdf",
       "user_id": "default",
       "chunk_count": 0,
-      "created_at": "2026-04-02T16:36:28.434938"
+      "created_at": "2026-05-26T20:30:02.101211"
     }
   ]
 }

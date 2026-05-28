@@ -35,6 +35,7 @@ from routers import (
     tools_router,
     data_router,
 )
+from routers.kb_evol import router as kb_evol_router
 from services.session_service import session_service
 
 # 配置日志
@@ -85,6 +86,7 @@ app.include_router(memory_router)
 app.include_router(knowledge_router)
 app.include_router(tools_router)
 app.include_router(data_router, prefix="/api/data", tags=["Data"])
+app.include_router(kb_evol_router)
 
 # ==================== 根端点 ====================
 
