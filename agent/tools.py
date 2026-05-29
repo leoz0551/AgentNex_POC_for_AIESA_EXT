@@ -9,7 +9,7 @@ from datetime import datetime
 from agno.tools import tool
 from agno.run import RunContext
 
-from config import KNOWLEDGE_DIR
+from config import KNOWLEDGE_DIR, KNOWLEDGE_SEARCH_DISTANCE_THRESHOLD
 from models_chatbi import SessionLocal, UserInfo, UserQuery, QueryContent
 from tools_sandbox import execute_pandas_analysis
 from data_cache import set_session_df, get_next_handle_name
@@ -126,25 +126,90 @@ def search_knowledge_base(query: str) -> str:
     try:
         logger.info(f"Searching knowledge base for: {query}")
         results = _knowledge_instance.search(query=query)
-        logger.info(f"Search results: {results}")
+
+        # 过滤低相关度结果（余弦距离最大为 KNOWLEDGE_SEARCH_DISTANCE_THRESHOLD）
+        filtered_results = []
+        for r in (results or []):
+            dist = None
+            # 1. 优先尝试从 distance 属性获取
+            if hasattr(r, 'distance') and getattr(r, 'distance', None) is not None:
+                dist = getattr(r, 'distance')
+            else:
+                # 2. 其次尝试从 metadata/meta_data 获取 distances 或 distance 键
+                metadata = getattr(r, 'meta_data', getattr(r, 'metadata', {})) or {}
+                if isinstance(metadata, dict):
+                    dist = metadata.get('distances', metadata.get('distance'))
+            
+            if dist is not None:
+                try:
+                    dist_val = float(dist)
+                    if dist_val > KNOWLEDGE_SEARCH_DISTANCE_THRESHOLD:
+                        logger.info(f"Filtered out low-relevance document (distance {dist_val})")
+                        continue
+                except (ValueError, TypeError):
+                    pass
+            filtered_results.append(r)
+        results = filtered_results
+
+        # 构建截断日志（最大150字），防止控制台日志过大
+        log_results = []
+        for r in (results or []):
+            if isinstance(r, dict):
+                c = r.get("content", r.get("chunk", ""))
+            elif hasattr(r, 'content'):
+                c = r.content
+            else:
+                c = str(r)
+            c_clean = c.replace('\n', ' ').strip()
+            log_results.append(c_clean[:150] + "..." if len(c_clean) > 150 else c_clean)
+        logger.info(f"Search results (truncated to 150 chars): {log_results}")
 
         if not results:
             return "【知识库搜索结果】未找到相关内容。"
 
         # 格式化搜索结果
         formatted_results = []
+        import re
+        uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_', re.IGNORECASE)
+
         for i, result in enumerate(results, 1):
+            source = None
+            content = ""
+
             if isinstance(result, dict):
                 content = result.get("content", result.get("chunk", ""))
-                source = result.get("metadata", {}).get("filename", result.get("metadata", {}).get("source", "未知来源"))
-                formatted_results.append(f"【结果 {i}】来源: {source}\n{content[:500]}...")
+                metadata = result.get("metadata") or result.get("meta_data") or {}
             elif hasattr(result, 'content'):
                 # agno Document 对象
                 content = result.content
-                name = getattr(result, 'name', '未知来源')
-                formatted_results.append(f"【结果 {i}】来源: {name}\n{content[:500]}...")
+                metadata = getattr(result, 'meta_data', getattr(result, 'metadata', {})) or {}
             else:
-                formatted_results.append(f"【结果 {i}】\n{str(result)[:500]}...")
+                content = str(result)
+                metadata = {}
+
+            # 确定来源名称：
+            # 1. 优先采用网页标题（适用于网页爬取）
+            source = metadata.get("title")
+            if not source:
+                # 2. 其次采用文件名或源路径 (包含对象属性 name)
+                raw_source = (
+                    metadata.get("filename") or 
+                    getattr(result, "name", None) or 
+                    metadata.get("name") or 
+                    metadata.get("source") or 
+                    "未知来源"
+                )
+                # 如果是物理路径，且没有标题，则只截取最后的文件名部分
+                if os.path.isabs(str(raw_source)) or "\\" in str(raw_source) or "/" in str(raw_source):
+                    from pathlib import Path
+                    source = Path(str(raw_source)).name
+                else:
+                    source = str(raw_source)
+
+            # UUID清理：如果是物理文件，去除 UUID 前缀
+            source = uuid_pattern.sub('', str(source))
+
+            formatted_results.append(f"【结果 {i}】来源: {source}\n{content[:500]}...")
 
         return f"【知识库搜索结果】找到 {len(results)} 条相关内容：\n\n" + "\n\n---\n\n".join(formatted_results)
     except Exception as e:

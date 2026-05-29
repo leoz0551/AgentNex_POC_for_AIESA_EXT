@@ -42,6 +42,7 @@ chroma_db = ChromaDb(
     collection=CHROMA_COLLECTION_NAME,
     path=str(CHROMA_DIR),
     embedder=embedder,
+    persistent_client=True,
 )
 
 # 确保集合存在

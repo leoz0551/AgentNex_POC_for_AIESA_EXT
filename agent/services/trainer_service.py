@@ -11,6 +11,7 @@ from agno.models.openai import OpenAIChat
 
 from config import MODEL_ID, MODEL_BASE_URL, OPENROUTER_API_KEY
 from database import db, knowledge
+from tools import search_knowledge_base
 from prompts import load_prompt_template
 from services.agent_service import get_memory_manager
 
@@ -25,9 +26,17 @@ def create_trainer_agent(session_id: Optional[str] = None, user_id: str = "defau
     ai_trainer system prompt template, has restricted toolsets, and targets the CS
     training domain.
     """
-    # Load strict non-conflicting prompts
-    instructions = load_prompt_template("ai_trainer")
-    logger.info(f"AI Trainer RAG Agent initialized. Loaded {len(instructions)} training instructions.")
+    # Load the ai_trainer.md prompt as a single multi-line string to preserve
+    # its full Markdown structure, headers, and bullet hierarchy.
+    from config import PROMPTS_DIR
+    prompt_file = PROMPTS_DIR / "ai_trainer.md"
+    try:
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            instructions = [f.read()]
+        logger.info("AI Trainer RAG Agent initialized. Loaded unified Markdown system prompt.")
+    except Exception as e:
+        logger.error(f"Failed to load ai_trainer system prompt: {e}")
+        instructions = ["You are the AI Trainer Agent, a professional customer service training assistant."]
 
     return Agent(
         model=OpenAIChat(
@@ -51,12 +60,11 @@ def create_trainer_agent(session_id: Optional[str] = None, user_id: str = "defau
         
         # Dedicated RAG knowledge base configuration
         knowledge=knowledge,
-        search_knowledge=True,
+        search_knowledge=False,  # Disable native search tool to avoid duplicate tools & LLM confusion
         
         # Physically stripped tools (No web search / No calculator)
-        tools=[],
+        tools=[search_knowledge_base],
         
         instructions=instructions,
-        system_message_role="user",
         user_id=user_id,
     )

@@ -47,7 +47,7 @@ DOCUMENTS_META_FILE = DATA_DIR / "documents_meta.json"
 
 # ==================== 模型配置 ====================
 
-MODEL_ID = "minimax/minimax-m2.5"
+MODEL_ID = "openai/gpt-4o-mini"
 MODEL_BASE_URL = "https://openrouter.ai/api/v1"
 
 
@@ -57,6 +57,12 @@ MODEL_BASE_URL = "https://openrouter.ai/api/v1"
 EMBEDDER_ID = "qwen/qwen3-embedding-8b"
 EMBEDDER_BASE_URL = "https://openrouter.ai/api/v1"
 CHROMA_COLLECTION_NAME = "agentnex_knowledge"
+
+# Cosine distance threshold for filtering knowledge base search results.
+# Documents with a cosine distance greater than this threshold will be filtered out as irrelevant.
+# Lower threshold means higher similarity requirement (more precise, fewer results).
+# Default balanced threshold is 0.55.
+KNOWLEDGE_SEARCH_DISTANCE_THRESHOLD = 0.55
 
 
 # ==================== API 配置 ====================
