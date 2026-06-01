@@ -12,6 +12,7 @@ interface TrainerMessage {
   userQuery?: string;
   content: string; 
   timestamp: string;
+  courseTaskId?: string;
 }
 
 export function AITrainer() {
@@ -31,6 +32,8 @@ export function AITrainer() {
   const [inputFocused, setInputFocused] = useState(false);
   const [showCourse, setShowCourse] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [courseData, setCourseData] = useState<any>(null);
+  const [isCourseLoading, setIsCourseLoading] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,6 +41,36 @@ export function AITrainer() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const pollCourseTask = async (taskId: string) => {
+    setIsCourseLoading(true);
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      try {
+        const res = await chatApi.getCourseTask(taskId);
+        if (res.status === 'completed') {
+          clearInterval(interval);
+          try {
+            const parsed = JSON.parse(res.result);
+            setCourseData(parsed);
+          } catch (e) {
+            console.error("Failed to parse course result:", e);
+          }
+          setIsCourseLoading(false);
+        } else if (res.status === 'failed') {
+          clearInterval(interval);
+          setIsCourseLoading(false);
+        }
+        attempts++;
+        if (attempts > 30) {
+          clearInterval(interval);
+          setIsCourseLoading(false);
+        }
+      } catch (e) {
+        console.error("Polling error", e);
+      }
+    }, 2000);
+  };
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -97,6 +130,11 @@ export function AITrainer() {
       (data) => {
         setSessionId(data.session_id);
         setIsLoading(false);
+        if (data.course_task_id) {
+          setMessages(prev => prev.map(m => 
+            m.id === aiMsgId ? { ...m, courseTaskId: data.course_task_id } : m
+          ));
+        }
       },
       (error) => {
         console.error('AI Trainer Agent Stream error:', error);
@@ -108,8 +146,11 @@ export function AITrainer() {
     );
   };
 
-  const handleShowCourse = () => {
+  const handleShowCourse = (taskId?: string) => {
     setShowCourse(true);
+    if (taskId && (!courseData || isCourseLoading)) {
+      pollCourseTask(taskId);
+    }
   };
 
   const isEnglish = i18n.language === 'en-US';
@@ -219,7 +260,7 @@ export function AITrainer() {
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3">
                         <span className="text-xs text-slate-600 font-semibold">{t('aiTrainer.courseCtaPrefix')}</span>
                         <button 
-                          onClick={handleShowCourse}
+                          onClick={() => handleShowCourse(msg.courseTaskId)}
                           className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all w-fit"
                         >
                           <Play className="h-3 w-3 fill-current" />
@@ -278,7 +319,9 @@ export function AITrainer() {
               <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
                 <GraduationCap className="h-5.5 w-5.5" />
               </div>
-              <h2 className="text-base font-bold text-slate-800 tracking-tight">{t('aiTrainer.courseTitle')}</h2>
+              <h2 className="text-base font-bold text-slate-800 tracking-tight">
+                {courseData?.course_title || t('aiTrainer.courseTitle')}
+              </h2>
             </div>
             <button 
               onClick={() => setShowCourse(false)}
@@ -290,9 +333,66 @@ export function AITrainer() {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar bg-slate-50/20">
-            <div className="prose prose-slate max-w-none text-slate-700">
-              <MarkdownRenderer content={t('aiTrainer.courseContent')} />
-            </div>
+            {isCourseLoading ? (
+               <div className="flex flex-col items-center justify-center h-full space-y-4">
+                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                 <p className="text-slate-500 font-medium">Generating micro-course content...</p>
+               </div>
+            ) : courseData ? (
+               <div className="flex flex-col md:flex-row gap-8">
+                 {/* Main Content (Left) */}
+                 <div className="flex-1 prose prose-slate max-w-none text-slate-700">
+                   {courseData.learning_objectives && courseData.learning_objectives.length > 0 && (
+                     <div className="mb-8">
+                       <h3 className="text-xl font-bold text-slate-800 mb-4">Learning Objectives</h3>
+                       <ul className="list-disc pl-5 space-y-2">
+                         {courseData.learning_objectives.map((obj: string, idx: number) => (
+                           <li key={idx} className="text-slate-700">{obj}</li>
+                         ))}
+                       </ul>
+                     </div>
+                   )}
+                   {courseData.sections && courseData.sections.map((section: any, idx: number) => (
+                     <div key={idx} className="mb-8" id={`section-${idx}`}>
+                       <h3 className="text-xl font-bold text-slate-800 mb-4">{section.section_title}</h3>
+                       <div className="space-y-4">
+                         {section.content.map((paragraph: string, pIdx: number) => (
+                           <p key={pIdx} className="text-slate-700 leading-relaxed">{paragraph}</p>
+                         ))}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+                 {/* Table of Contents (Right) */}
+                 <div className="w-48 shrink-0 hidden md:block border-l border-slate-200 pl-6 space-y-6 self-start sticky top-0">
+                   {courseData.time_estimate && (
+                     <div>
+                       <h4 className="text-sm font-bold text-slate-800 mb-2">Time Estimate</h4>
+                       <p className="text-xs text-slate-500 flex items-center gap-1">
+                         <span className="w-3 h-3 rounded-full border border-slate-400 block shrink-0" />
+                         {courseData.time_estimate}
+                       </p>
+                     </div>
+                   )}
+                   <div>
+                     <h4 className="text-sm font-bold text-slate-800 mb-2">Topics</h4>
+                     <div className="w-1 h-4 bg-blue-500 absolute -ml-6 mt-1 rounded-r-md"></div>
+                     <ul className="space-y-3">
+                       <li className="text-xs text-blue-600 font-medium cursor-pointer">Learning Objectives</li>
+                       {courseData.sections && courseData.sections.map((section: any, idx: number) => (
+                         <li key={idx} className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer transition-colors">
+                           {section.section_title}
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 </div>
+               </div>
+            ) : (
+               <div className="prose prose-slate max-w-none text-slate-700">
+                 <MarkdownRenderer content={t('aiTrainer.courseContent')} />
+               </div>
+            )}
           </div>
 
           {/* Footer Actions */}

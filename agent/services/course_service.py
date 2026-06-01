@@ -58,18 +58,29 @@ def update_course_task(task_id: str, status: str, result: str = None, error: str
 def create_course_agent() -> Agent:
     """Create a Course Agent for generating micro-courses based on RAG context."""
     course_instructions = """
-    你是一个专业的微课程内容设计师。
-    你的任务是根据用户最新提出的问题以及 RAG 检索到的参考资料，生成一份用于展示微课结构化内容的 JSON 数据。
+    You are a professional micro-course content designer.
+    Your task is to generate structured JSON data for a micro-course based on the user's latest question and the RAG-retrieved reference materials.
     
-    要求：
-    1. 提取参考资料中的核心重点，拆解为 3-5 个逻辑清晰的部分。
-    2. 严格按以下 JSON 格式输出，并且不要包含任何 JSON 之外的多余文本（如不需要 markdown 代码块标识，直接输出 JSON 字符串）：
+    Requirements:
+    1. Extract the core points from the reference materials and break them down into logically clear sections.
+    2. The output MUST be in the following JSON format strictly. The format should be suitable for rendering as an HTML article with a table of contents on the right side and main content on the left.
+    3. Do NOT include any extra text outside of the JSON (e.g., no markdown code blocks, output the raw JSON string directly).
+    
+    JSON Format:
     {
-        "title": "课程的主标题",
-        "slides": [
+        "course_title": "The Main Title of the Course",
+        "time_estimate": "Estimated time (e.g., About 10 mins)",
+        "learning_objectives": [
+            "Objective 1",
+            "Objective 2"
+        ],
+        "sections": [
             {
-                "title": "这一页的标题",
-                "content": ["要点 1", "要点 2", "要点 3"]
+                "section_title": "Title of this section",
+                "content": [
+                    "Paragraph 1 text here.",
+                    "Paragraph 2 text here."
+                ]
             }
         ]
     }

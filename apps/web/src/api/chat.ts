@@ -99,7 +99,7 @@ export const chatApi = {
     messages: { content: string; role: string }[],
     sessionId: string | undefined,
     onChunk: (content: string) => void,
-    onDone: (data: { session_id: string; full_content: string }) => void,
+    onDone: (data: { session_id: string; full_content: string; course_task_id?: string }) => void,
     onError: (error: string) => void
   ): Promise<void> {
     const res = await fetch(`${API_BASE}/trainer/chat/stream`, {
@@ -141,6 +141,7 @@ export const chatApi = {
                 onDone({
                   session_id: res.headers.get('X-Session-Id') || '',
                   full_content: data.full_content,
+                  course_task_id: data.course_task_id,
                 });
               } else if (data.content) {
                 onChunk(data.content);
@@ -175,6 +176,13 @@ export const chatApi = {
       method: 'POST',
     });
     if (!res.ok) throw new Error('Regenerate error');
+    return res.json();
+  },
+
+  // 获取微课程任务状态
+  async getCourseTask(taskId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/course/${taskId}`);
+    if (!res.ok) throw new Error('Task not found');
     return res.json();
   },
 };
