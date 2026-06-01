@@ -45,11 +45,11 @@ export function AITrainer() {
   const pollCourseTask = async (taskId: string) => {
     setIsCourseLoading(true);
     let attempts = 0;
-    const interval = setInterval(async () => {
+    
+    const checkStatus = async () => {
       try {
         const res = await chatApi.getCourseTask(taskId);
         if (res.status === 'completed') {
-          clearInterval(interval);
           try {
             const parsed = JSON.parse(res.result);
             setCourseData(parsed);
@@ -57,18 +57,31 @@ export function AITrainer() {
             console.error("Failed to parse course result:", e);
           }
           setIsCourseLoading(false);
+          return true;
         } else if (res.status === 'failed') {
-          clearInterval(interval);
           setIsCourseLoading(false);
-        }
-        attempts++;
-        if (attempts > 30) {
-          clearInterval(interval);
-          setIsCourseLoading(false);
+          return true;
         }
       } catch (e) {
         console.error("Polling error", e);
       }
+      return false;
+    };
+
+    // Check immediately first
+    const isDone = await checkStatus();
+    if (isDone) return;
+
+    // Otherwise poll every 2s
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 30) {
+        clearInterval(interval);
+        setIsCourseLoading(false);
+        return;
+      }
+      const done = await checkStatus();
+      if (done) clearInterval(interval);
     }, 2000);
   };
 
@@ -405,19 +418,13 @@ export function AITrainer() {
                 <CheckCircle2 className="h-4 w-4" />
                 {t('aiTrainer.finish')}
               </button>
-              <button 
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold transition-all shadow-sm"
-              >
-                <RefreshCw className="h-4 w-4" />
-                {t('aiTrainer.regenerate')}
-              </button>
             </div>
             
             <button 
               className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
             >
               <Bot className="h-4 w-4" />
-              {t('aiTrainer.practice')}
+              {t('aiTrainer.voiceExplain')}
             </button>
           </div>
         </div>

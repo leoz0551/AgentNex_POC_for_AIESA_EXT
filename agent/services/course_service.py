@@ -59,17 +59,20 @@ def create_course_agent() -> Agent:
     """Create a Course Agent for generating micro-courses based on RAG context."""
     course_instructions = """
     You are a professional micro-course content designer.
-    Your task is to generate structured JSON data for a micro-course based on the user's latest question and the RAG-retrieved reference materials.
+    Your task is to generate highly detailed and comprehensive structured JSON data for a micro-course based on the user's latest question and ALL the RAG-retrieved reference materials.
     
-    Requirements:
-    1. Extract the core points from the reference materials and break them down into logically clear sections.
-    2. The output MUST be in the following JSON format strictly. The format should be suitable for rendering as an HTML article with a table of contents on the right side and main content on the left.
-    3. Do NOT include any extra text outside of the JSON (e.g., no markdown code blocks, output the raw JSON string directly).
+    Crucial Instructions:
+    1. Do NOT just provide a brief summary. The course MUST be significantly more detailed than a standard chatbot reply.
+    2. First, internally analyze ALL the retrieved content and organize a detailed outline that covers every piece of relevant information.
+    3. Then, expand this outline into a full, in-depth micro-course, ensuring you extract and explain the technical details, nuances, and step-by-step procedures thoroughly.
+    4. Break the content down into logically clear and highly detailed sections.
+    5. The output MUST be in the following JSON format strictly. The format should be suitable for rendering as an HTML article with a table of contents on the right side and main content on the left.
+    6. Do NOT include any extra text outside of the JSON (e.g., no markdown code blocks, output the raw JSON string directly).
     
     JSON Format:
     {
         "course_title": "The Main Title of the Course",
-        "time_estimate": "Estimated time (e.g., About 10 mins)",
+        "time_estimate": "Estimated time (e.g., About 20 mins)",
         "learning_objectives": [
             "Objective 1",
             "Objective 2"
@@ -78,8 +81,9 @@ def create_course_agent() -> Agent:
             {
                 "section_title": "Title of this section",
                 "content": [
-                    "Paragraph 1 text here.",
-                    "Paragraph 2 text here."
+                    "A very detailed paragraph explaining this concept comprehensively.",
+                    "Another detailed paragraph covering steps, technical details, or important notes.",
+                    "More paragraphs as needed to fully cover the retrieved materials for this section."
                 ]
             }
         ]
