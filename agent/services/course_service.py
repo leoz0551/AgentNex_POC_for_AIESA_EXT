@@ -1,0 +1,109 @@
+"""
+Course Service Module
+Responsible for creating Course Agents and managing course generation tasks.
+
+This module is intentionally kept synchronous and simple.
+The async orchestration is handled by the Workflow layer.
+"""
+
+import logging
+import uuid
+from datetime import datetime
+from typing import Dict, Any, Optional
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
+
+from config import MODEL_ID, MODEL_BASE_URL, OPENROUTER_API_KEY
+
+logger = logging.getLogger(__name__)
+
+# ==================== Task Store ====================
+# Simple in-memory store for course generation tasks.
+# For production, this should be moved to a database.
+_course_tasks: Dict[str, Dict[str, Any]] = {}
+
+
+def create_course_task(session_id: str) -> str:
+    """Create a new course generation task tracking entry."""
+    task_id = str(uuid.uuid4())
+    _course_tasks[task_id] = {
+        "id": task_id,
+        "session_id": session_id,
+        "status": "generating",
+        "result": None,
+        "error": None,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
+    }
+    logger.info(f"Created course task {task_id} for session {session_id}")
+    return task_id
+
+
+def get_course_task(task_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve a course generation task by ID."""
+    return _course_tasks.get(task_id)
+
+
+def update_course_task(task_id: str, status: str, result: str = None, error: str = None):
+    """Update a course generation task's status and result."""
+    if task_id in _course_tasks:
+        _course_tasks[task_id]["status"] = status
+        _course_tasks[task_id]["result"] = result
+        _course_tasks[task_id]["error"] = error
+        _course_tasks[task_id]["updated_at"] = datetime.now()
+
+
+# ==================== Course Agent ====================
+
+def create_course_agent() -> Agent:
+    """Create a Course Agent for generating micro-courses based on RAG context."""
+    course_instructions = """
+    你是一个专业的微课程内容设计师。
+    你的任务是根据用户最新提出的问题以及 RAG 检索到的参考资料，生成一份用于展示微课结构化内容的 JSON 数据。
+    
+    要求：
+    1. 提取参考资料中的核心重点，拆解为 3-5 个逻辑清晰的部分。
+    2. 严格按以下 JSON 格式输出，并且不要包含任何 JSON 之外的多余文本（如不需要 markdown 代码块标识，直接输出 JSON 字符串）：
+    {
+        "title": "课程的主标题",
+        "slides": [
+            {
+                "title": "这一页的标题",
+                "content": ["要点 1", "要点 2", "要点 3"]
+            }
+        ]
+    }
+    """
+
+    return Agent(
+        model=OpenAIChat(
+            id=MODEL_ID,
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            extra_headers={
+                "HTTP-Referer": "https://github.com/LegendAgent/LegendAgent",
+                "X-Title": "AgentNex POC - Course",
+            }
+        ),
+        instructions=course_instructions,
+        markdown=False,  # Output raw JSON
+    )
+
+
+def generate_course_sync(task_id: str, prompt: str):
+    """
+    Synchronous course generation.
+    Designed to be called from a background thread by the Workflow layer.
+    """
+    logger.info(f"[CourseAgent] Starting course generation for task {task_id}")
+    try:
+        course_agent = create_course_agent()
+        response = course_agent.run(prompt)
+        ai_content = response.content if hasattr(response, 'content') else str(response)
+
+        update_course_task(task_id, status="completed", result=ai_content)
+        logger.info(f"[CourseAgent] Course generation completed for task {task_id}")
+
+    except Exception as e:
+        logger.error(f"[CourseAgent] Course generation failed for task {task_id}: {e}")
+        update_course_task(task_id, status="failed", error=str(e))

@@ -112,8 +112,11 @@ def set_knowledge_instance(knowledge):
     _knowledge_instance = knowledge
 
 
+# 临时保存最后一次 RAG 结果供 Workflow 提取
+_latest_rag_context = {}
+
 @tool
-def search_knowledge_base(query: str) -> str:
+def search_knowledge_base(query: str, run_context: RunContext = None) -> str:
     """
     搜索知识库中的内容。当用户询问关于已上传文档、知识库或特定主题的问题时，使用此工具搜索相关内容。
 
@@ -211,7 +214,13 @@ def search_knowledge_base(query: str) -> str:
 
             formatted_results.append(f"【结果 {i}】来源: {source}\n{content[:500]}...")
 
-        return f"【知识库搜索结果】找到 {len(results)} 条相关内容：\n\n" + "\n\n---\n\n".join(formatted_results)
+        final_result = f"【知识库搜索结果】找到 {len(results)} 条相关内容：\n\n" + "\n\n---\n\n".join(formatted_results)
+        
+        if run_context and run_context.session_id:
+            _latest_rag_context[run_context.session_id] = final_result
+            logger.info(f"Saved RAG context for session {run_context.session_id}")
+            
+        return final_result
     except Exception as e:
         logger.error(f"[KNOWLEDGE SEARCH] Error: {e}")
         import traceback
