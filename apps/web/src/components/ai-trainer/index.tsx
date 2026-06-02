@@ -40,24 +40,92 @@ export function AITrainer() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioQueueRef = useRef<Blob[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleVoiceExplain = async () => {
+  const playNextAudio = async () => {
+    if (audioQueueRef.current.length === 0) {
+      if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED || wsRef.current.readyState === WebSocket.CLOSING) {
+        setIsPlayingVoice(false);
+      }
+      return;
+    }
+    
+    // Only play if not currently playing
+    if (audioRef.current && !audioRef.current.paused) {
+      return;
+    }
+
+    const blob = audioQueueRef.current.shift();
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    let audio = audioRef.current;
+    if (!audio) {
+      audio = new Audio();
+      audioRef.current = audio;
+    }
+    
+    audio.src = url;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      playNextAudio();
+    };
+    audio.onerror = () => {
+      URL.revokeObjectURL(url);
+      playNextAudio();
+    };
+    
+    try {
+      await audio.play();
+    } catch (e) {
+      console.error('Audio play error:', e);
+      playNextAudio();
+    }
+  };
+
+  const handleVoiceExplain = () => {
     if (!courseData) return;
     
-    if (isPlayingVoice && audioRef.current) {
-      audioRef.current.pause();
+    if (isPlayingVoice) {
+      // Stop playing
+      if (wsRef.current) {
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ action: "abort" }));
+        }
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+      audioQueueRef.current = [];
       setIsPlayingVoice(false);
       return;
     }
 
-    try {
-      setIsVoiceLoading(true);
+    setIsVoiceLoading(true);
+    
+    let voiceUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8005';
+    if (voiceUrl.includes('127.0.0.1') || voiceUrl.includes('0.0.0.0')) {
+      const portMatch = voiceUrl.match(/:(\d+)/);
+      const port = portMatch ? portMatch[1] : '8005';
+      voiceUrl = `ws://${window.location.hostname}:${port}`;
+    }
+
+    const ws = new WebSocket(`${voiceUrl}/ws/v1/tts`);
+    ws.binaryType = 'blob';
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setIsVoiceLoading(false);
+      setIsPlayingVoice(true);
       
-      // Combine text
       let textToRead = `${courseData.course_title}。`;
       if (courseData.learning_objectives?.length) {
         textToRead += `学习目标：${courseData.learning_objectives.join('。')}。`;
@@ -70,46 +138,35 @@ export function AITrainer() {
           }
         });
       }
-
-      let voiceUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8005';
       
-      // 如果配置的是 127.0.0.1 或 0.0.0.0，自动替换为当前浏览器访问的主机IP，以确保在局域网下客户端能跨机器直接访问到语音服务
-      if (voiceUrl.includes('127.0.0.1') || voiceUrl.includes('0.0.0.0')) {
-        const portMatch = voiceUrl.match(/:(\d+)/);
-        const port = portMatch ? portMatch[1] : '8005';
-        voiceUrl = `${window.location.protocol}//${window.location.hostname}:${port}`;
-      }
+      ws.send(JSON.stringify({ text: textToRead }));
+    };
 
-      const response = await fetch(`${voiceUrl}/api/v1/tts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: textToRead }),
-      });
-
-      if (!response.ok) throw new Error('TTS failed');
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      
-      if (audioRef.current) {
-        audioRef.current.src = url;
+    ws.onmessage = (event) => {
+      if (event.data instanceof Blob) {
+        audioQueueRef.current.push(event.data);
+        playNextAudio();
       } else {
-        const audio = new Audio(url);
-        audio.onended = () => setIsPlayingVoice(false);
-        audioRef.current = audio;
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "tts_end") {
+            console.log("TTS Finished stream");
+          }
+        } catch (e) {}
       }
-      
-      setIsVoiceLoading(false);
-      setIsPlayingVoice(true);
-      await audioRef.current.play();
-      
-    } catch (error) {
-      console.error('Voice explanation error:', error);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket Error:', error);
       setIsVoiceLoading(false);
       setIsPlayingVoice(false);
-    }
+    };
+
+    ws.onclose = () => {
+      if (audioQueueRef.current.length === 0 && (!audioRef.current || audioRef.current.paused)) {
+        setIsPlayingVoice(false);
+      }
+    };
   };
 
   const pollCourseTask = async (taskId: string) => {
