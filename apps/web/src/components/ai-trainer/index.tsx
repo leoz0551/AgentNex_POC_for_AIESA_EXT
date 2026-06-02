@@ -126,18 +126,24 @@ export function AITrainer() {
       setIsVoiceLoading(false);
       setIsPlayingVoice(true);
       
-      let textToRead = `${courseData.course_title}。`;
-      if (courseData.learning_objectives?.length) {
-        textToRead += `学习目标：${courseData.learning_objectives.join('。')}。`;
-      }
-      if (courseData.sections?.length) {
-        courseData.sections.forEach((section: any) => {
-          textToRead += `${section.section_title}。`;
-          if (section.content?.length) {
-            textToRead += `${section.content.join('。')}。`;
-          }
-        });
-      }
+      // 递归提取所有文本内容，当遇到 learning_objectives 键时，动态注入对应的标题使其与 UI 一致
+      const extractText = (obj: any, keyName?: string): string => {
+        if (typeof obj === 'string') return obj;
+        if (Array.isArray(obj)) {
+          const arrText = obj.map(item => extractText(item)).join('\n');
+          return keyName === 'learning_objectives' ? `Learning Objectives\n${arrText}` : arrText;
+        }
+        if (typeof obj === 'object' && obj !== null) {
+          return Object.entries(obj)
+            .filter(([key]) => key !== 'time_estimate') // 略过无需朗读的预估时间
+            .map(([key, val]) => extractText(val, key))
+            .join('\n');
+        }
+        return '';
+      };
+      
+      const textToRead = extractText(courseData);
+      console.log('Sending text to voice service:', textToRead);
       
       ws.send(JSON.stringify({ text: textToRead }));
     };
