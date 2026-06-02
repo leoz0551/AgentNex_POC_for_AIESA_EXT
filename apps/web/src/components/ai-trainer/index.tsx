@@ -34,13 +34,83 @@ export function AITrainer() {
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [courseData, setCourseData] = useState<any>(null);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [isVoiceLoading, setIsVoiceLoading] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleVoiceExplain = async () => {
+    if (!courseData) return;
+    
+    if (isPlayingVoice && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlayingVoice(false);
+      return;
+    }
+
+    try {
+      setIsVoiceLoading(true);
+      
+      // Combine text
+      let textToRead = `${courseData.course_title}。`;
+      if (courseData.learning_objectives?.length) {
+        textToRead += `学习目标：${courseData.learning_objectives.join('。')}。`;
+      }
+      if (courseData.sections?.length) {
+        courseData.sections.forEach((section: any) => {
+          textToRead += `${section.section_title}。`;
+          if (section.content?.length) {
+            textToRead += `${section.content.join('。')}。`;
+          }
+        });
+      }
+
+      let voiceUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8005';
+      
+      // 如果配置的是 127.0.0.1 或 0.0.0.0，自动替换为当前浏览器访问的主机IP，以确保在局域网下客户端能跨机器直接访问到语音服务
+      if (voiceUrl.includes('127.0.0.1') || voiceUrl.includes('0.0.0.0')) {
+        const portMatch = voiceUrl.match(/:(\d+)/);
+        const port = portMatch ? portMatch[1] : '8005';
+        voiceUrl = `${window.location.protocol}//${window.location.hostname}:${port}`;
+      }
+
+      const response = await fetch(`${voiceUrl}/api/v1/tts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: textToRead }),
+      });
+
+      if (!response.ok) throw new Error('TTS failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = url;
+      } else {
+        const audio = new Audio(url);
+        audio.onended = () => setIsPlayingVoice(false);
+        audioRef.current = audio;
+      }
+      
+      setIsVoiceLoading(false);
+      setIsPlayingVoice(true);
+      await audioRef.current.play();
+      
+    } catch (error) {
+      console.error('Voice explanation error:', error);
+      setIsVoiceLoading(false);
+      setIsPlayingVoice(false);
+    }
+  };
 
   const pollCourseTask = async (taskId: string) => {
     setIsCourseLoading(true);
@@ -421,10 +491,24 @@ export function AITrainer() {
             </div>
             
             <button 
-              className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
+              onClick={handleVoiceExplain}
+              disabled={isVoiceLoading}
+              className={`flex items-center gap-2 px-7 py-2.5 rounded-xl ${
+                isVoiceLoading 
+                  ? 'bg-slate-300 cursor-not-allowed' 
+                  : isPlayingVoice 
+                    ? 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 shadow-red-500/20' 
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 active:scale-95'
+              } text-white font-bold shadow-md transition-all`}
             >
-              <Bot className="h-4 w-4" />
-              {t('aiTrainer.voiceExplain')}
+              {isVoiceLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlayingVoice ? (
+                <div className="w-3 h-3 bg-white mr-1"></div>
+              ) : (
+                <Bot className="h-4 w-4" />
+              )}
+              {isVoiceLoading ? t('common.loading') : isPlayingVoice ? 'Stop' : t('aiTrainer.voiceExplain')}
             </button>
           </div>
         </div>
