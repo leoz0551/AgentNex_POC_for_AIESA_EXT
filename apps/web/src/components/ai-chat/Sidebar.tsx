@@ -65,10 +65,9 @@ export const Sidebar = memo(function Sidebar({
   const navItems = useMemo(() => [
     { icon: MessageSquare, label: t('sidebar.sessions'), count: sessions.length, active: true, onClick: () => {} },
     { icon: Sparkles, label: t('sidebar.prompts'), key: 'prompts', onClick: () => onOpenPanel(panelView === 'prompts' ? 'none' : 'prompts') },
-    // { icon: Brain, label: t('sidebar.memory'), count: memoriesCount, key: 'memory', onClick: () => onOpenPanel(panelView === 'memory' ? 'none' : 'memory') },
     { icon: BookOpen, label: t('sidebar.knowledge'), count: knowledgeDocsCount, key: 'knowledge', onClick: () => onOpenPanel(panelView === 'knowledge' ? 'none' : 'knowledge') },
     { icon: Search, label: t('sidebar.tools'), count: webSearchEnabled ? 1 : 0, countLabel: webSearchEnabled ? (i18n.language === 'zh-CN' ? '开' : 'On') : (i18n.language === 'zh-CN' ? '关' : 'Off'), key: 'tools', onClick: () => onOpenPanel(panelView === 'tools' ? 'none' : 'tools') },
-    { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => window.open('/voice-trainer', '_blank') },
+    { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => onOpenPanel(panelView === 'ai_trainer' ? 'none' : 'ai_trainer') },
   ], [t, sessions.length, memoriesCount, knowledgeDocsCount, webSearchEnabled, i18n.language, panelView, onOpenPanel]);
 
   const handleSessionClick = (id: string) => {

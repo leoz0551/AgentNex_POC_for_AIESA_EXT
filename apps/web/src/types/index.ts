@@ -60,7 +60,7 @@ export interface KnowledgeDocument {
 }
 
 // 右侧面板视图类型
-export type PanelView = 'none' | 'memory' | 'knowledge' | 'tools' | 'skills' | 'prompts';
+export type PanelView = 'none' | 'memory' | 'knowledge' | 'tools' | 'skills' | 'prompts' | 'ai_trainer';
 
 // 知识库统计
 export interface KnowledgeStats {

@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Brain, BookOpen, X, Wand2, Trash2, Sparkles, GripVertical } from 'lucide-react';
+import { Brain, BookOpen, X, Wand2, Trash2, Sparkles, GripVertical, GraduationCap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { PanelView, KnowledgeDocument, KnowledgeStats, Memory } from '../../types';
 import { MemoryPanel } from './MemoryPanel';
 import { KnowledgePanel } from './KnowledgePanel';
 import { ToolsPanel } from './ToolsPanel';
 import { PromptsPanel } from './PromptsPanel';
+import { VoiceTrainer } from '../voice-trainer';
 import { Button } from '@workspace/ui/components/button';
 
 interface RightPanelProps {
@@ -165,6 +166,7 @@ export function RightPanel({
       case 'knowledge': return t('knowledge.title');
       case 'tools': return t('tools.title');
       case 'prompts': return t('prompts.title');
+      case 'ai_trainer': return t('sidebar.aiTrainer');
       default: return '';
     }
   };
@@ -215,6 +217,7 @@ export function RightPanel({
                   {panelView === 'knowledge' && <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                   {panelView === 'tools' && <Wand2 className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                   {panelView === 'prompts' && <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
+                  {panelView === 'ai_trainer' && <GraduationCap className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                 </div>
               </div>
               {/* Title with gradient text */}
@@ -287,6 +290,10 @@ export function RightPanel({
 
           {panelView === 'prompts' && (
             <PromptsPanel onPromptSelect={onPromptSelect} onOpenSettings={knowledgeProps.onOpenSettings} />
+          )}
+
+          {panelView === 'ai_trainer' && (
+            <VoiceTrainer />
           )}
         </div>
       </div>

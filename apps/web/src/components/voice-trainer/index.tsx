@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-// import { Download, X } from 'lucide-react';
-import './style.css'; // We'll put the styles here
+import { useStyleConfig } from '../../hooks';
+import './style.css';
 
 const REALTIME_MODEL = 'gpt-realtime';
 const EVAL_MODEL = 'gpt-4o';
@@ -120,6 +120,9 @@ interface Message {
 }
 
 export function VoiceTrainer() {
+  const { config: styleConfig } = useStyleConfig();
+  const primaryColor = styleConfig.colors.primary || '#2563eb';
+
   const [difficulty, setDifficulty] = useState<'easy' | 'moderate' | 'difficult'>('easy');
   const [statusState, setStatusState] = useState('');
   const [statusText, setStatusText] = useState('Ready to start');
@@ -480,38 +483,38 @@ ${transcript}`;
   };
 
   return (
-    <div className="vt-body">
-      <header className="vt-header">
-        <div>
-          <h1>Voice Trainer</h1>
-          <div className="vt-subtitle">Customer Service Role-play Simulation</div>
-        </div>
-        <div className="vt-difficulty-wrap">
+    <div className="vt-body" style={{ 
+      '--vt-primary': primaryColor,
+      '--vt-primary-light': `${primaryColor}26`,
+      '--vt-primary-medium': `${primaryColor}40`
+    } as any}>
+
+      <main className="vt-main">
+        <div className="vt-difficulty-wrap-top">
           <label htmlFor="difficulty-select">Difficulty Level</label>
           <select 
             id="difficulty-select" 
             value={difficulty} 
             onChange={(e: any) => setDifficulty(e.target.value)}
+            disabled={buttonsState.cancel}
           >
             <option value="easy">Easy Customer</option>
             <option value="moderate">Moderate Customer</option>
             <option value="difficult">Difficult Customer</option>
           </select>
         </div>
-      </header>
 
-      <main className="vt-main">
         <div className="vt-avatar-wrap">
           <div className={`vt-avatar-ring ${statusState}`} id="avatar-ring"></div>
           <div className="vt-avatar-svg" id="avatar-placeholder">
-            <svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="45" cy="33" r="22" fill="#bfdbfe"/>
-              <path d="M8 82 C8 58 82 58 82 82" fill="#bfdbfe"/>
-              <circle cx="45" cy="33" r="16" fill="#93c5fd"/>
-              <circle cx="38" cy="30" r="2.5" fill="#1d4ed8"/>
-              <circle cx="52" cy="30" r="2.5" fill="#1d4ed8"/>
-              <path d="M38 39 Q45 45 52 39" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              <text x="45" y="76" textAnchor="middle" fill="#2563eb" fontSize="9" fontFamily="sans-serif" fontWeight="700">AI TRAINER</text>
+            <svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: primaryColor }}>
+              <circle cx="45" cy="33" r="22" fill="currentColor" opacity="0.2"/>
+              <path d="M8 82 C8 58 82 58 82 82" fill="currentColor" opacity="0.2"/>
+              <circle cx="45" cy="33" r="16" fill="currentColor" opacity="0.4"/>
+              <circle cx="38" cy="30" r="2.5" fill="currentColor"/>
+              <circle cx="52" cy="30" r="2.5" fill="currentColor"/>
+              <path d="M38 39 Q45 45 52 39" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              <text x="45" y="76" textAnchor="middle" fill="currentColor" fontSize="9" fontFamily="sans-serif" fontWeight="700">AI TRAINER</text>
             </svg>
           </div>
         </div>
