@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { WelcomeScreen } from './WelcomeScreen';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
+import { useTheme } from '../theme-provider';
 
 // 懒加载面板组件 - 只在需要时才加载
 const RightPanel = lazy(() => import('./RightPanel').then(m => ({ default: m.RightPanel })));
@@ -23,7 +24,17 @@ export function AIChat() {
     }
     return true; // SSR时默认PC端
   });
+  
+  const { theme, setTheme } = useTheme();
   const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [theme]);
   const [panelView, setPanelView] = useState<PanelView>('none');
   const [webSearchEnabled, setWebSearchEnabled] = useState(true);
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false);
@@ -122,8 +133,8 @@ export function AIChat() {
 
   // 主题切换
   const toggleDark = useCallback(() => {
-    setIsDark(prev => !prev);
-  }, []);
+    setTheme(isDark ? 'light' : 'dark');
+  }, [isDark, setTheme]);
 
   // 打开面板
   const openPanel = useCallback((panel: PanelView) => {
@@ -186,7 +197,7 @@ export function AIChat() {
   }, [isResizing]);
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${isDark ? 'dark bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
+    <div className={`flex h-screen transition-colors duration-300 ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
       {/* Sidebar */}
       {sidebarOpen && (
         <Sidebar
