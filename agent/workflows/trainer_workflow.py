@@ -83,8 +83,14 @@ class TrainerCourseWorkflow:
                     name=f"course-gen-{task_id[:8]}"
                 ).start()
 
-                # Append placeholder to stream
-                placeholder = "\n\n*[详细微课程内容正在生成中... / Detailed micro-course content is generating...]*"
+                # Simple heuristic: if user message has Chinese characters, default to Chinese, else English
+                import re
+                has_chinese = bool(re.search(r'[\u4e00-\u9fff]', user_message))
+                if has_chinese:
+                    placeholder = "\n\n*[详细微课程内容正在生成中...]*"
+                else:
+                    placeholder = "\n\n*[Detailed micro-course content is generating...]*"
+                
                 full_content += placeholder
                 yield f"data: {json.dumps({'content': placeholder, 'done': False})}\n\n"
 

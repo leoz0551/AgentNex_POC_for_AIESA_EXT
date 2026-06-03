@@ -1,5 +1,5 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
-import { Send, Upload, Globe, LayoutGrid, RefreshCw, BarChart3, Check } from 'lucide-react';
+import { useRef, useEffect } from 'react';
+import { Send, Globe, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@workspace/ui/components/button';
 import { languages } from '../../i18n';
@@ -32,17 +32,9 @@ export function InputArea({
   onFileUpload,
   styleConfig,
   chatBoardMode,
-  setChatBoardMode,
 }: InputAreaProps) {
   const { i18n } = useTranslation();
-  const [toolsOpen, setToolsOpen] = useState(false);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
-
-  const handleUploadClick = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  }, [fileInputRef]);
 
   const toggleLanguage = () => {
     const currentIndex = languages.findIndex(lang => lang.code === i18n.language);
@@ -54,7 +46,7 @@ export function InputArea({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (toolsMenuRef.current && !toolsMenuRef.current.contains(event.target as Node)) {
-        setToolsOpen(false);
+        // Menu was removed
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -71,69 +63,7 @@ export function InputArea({
         <div className={`relative rounded-lg transition-all duration-500 ${inputFocused ? 'shadow-2xl shadow-violet-500/20 ring-2 ring-violet-500/30 border-violet-500/40' : 'shadow-xl border-border/50 hover:shadow-2xl hover:shadow-violet-500/10'} border bg-background/80 backdrop-blur-xl`}>
           {/* GPT style Input Inner Wrapper */}
           <div className="relative flex items-end p-1.5 md:p-2">
-            <button
-              type="button"
-              onClick={handleUploadClick}
-              className="p-2 md:p-2.5 rounded-lg bg-accent/50 hover:bg-accent transition-all duration-200 text-muted-foreground hover:text-violet-500 hover:scale-105 active:scale-95 cursor-pointer dark:bg-accent/30 dark:hover:bg-accent/60"
-            >
-              <Upload className="h-4 w-4 md:h-5 md:w-5" />
-            </button>
-
-            {/* Tools Dropdown Trigger */}
-            <div className="relative" ref={toolsMenuRef}>
-              <button
-                type="button"
-                onClick={() => setToolsOpen(!toolsOpen)}
-                className={`ml-1 p-2 md:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${toolsOpen ? 'bg-violet-500/20 text-violet-500' : 'bg-accent/50 text-muted-foreground hover:bg-accent dark:bg-accent/30'}`}
-              >
-                <LayoutGrid className="h-4 w-4 md:h-5 md:w-5" />
-              </button>
-
-              {/* Tools Menu Popover */}
-              {toolsOpen && (
-                <div className="absolute bottom-full left-0 mb-3 w-56 rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50">
-                  <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 border-b border-border/30 mb-1">
-                    系统工具
-                  </div>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setToolsOpen(false);
-                      document.getElementById('chatbi-refresh-upload')?.click();
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-sm text-foreground"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                      <RefreshCw className="h-4 w-4" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-medium">刷新数据库</div>
-                      <div className="text-[10px] text-muted-foreground">清空并重新导入日志</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setChatBoardMode(!chatBoardMode);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-sm text-foreground"
-                  >
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${chatBoardMode ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30' : 'bg-violet-500/10 text-violet-500'}`}>
-                      <BarChart3 className="h-4 w-4" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <div className="font-medium flex items-center justify-between">
-                        ChatBoard
-                        {chatBoardMode && <Check className="h-3 w-3" />}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">强制开启 ChatBI 模式</div>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Removed buttons */}
 
             <textarea
               ref={textareaRef}

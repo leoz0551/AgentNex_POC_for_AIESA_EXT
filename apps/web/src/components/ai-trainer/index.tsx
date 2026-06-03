@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GraduationCap, X, ChevronLeft, Bot, RefreshCw, Play, CheckCircle2, User } from 'lucide-react';
+import { GraduationCap, X, ChevronLeft, Bot, Play, CheckCircle2, User } from 'lucide-react';
 import { InputArea } from './InputArea';
 import { MarkdownRenderer } from '../ai-chat/MarkdownRenderer';
 import { chatApi } from '../../api/chat';

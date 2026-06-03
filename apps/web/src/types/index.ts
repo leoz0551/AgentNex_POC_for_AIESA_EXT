@@ -5,6 +5,7 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: string;
   feedback?: 'like' | 'dislike' | null;
+  courseTaskId?: string;
 }
 
 // 会话类型

@@ -68,6 +68,7 @@ def create_course_agent() -> Agent:
     4. Break the content down into logically clear and highly detailed sections.
     5. The output MUST be in the following JSON format strictly. The format should be suitable for rendering as an HTML article with a table of contents on the right side and main content on the left.
     6. Do NOT include any extra text outside of the JSON (e.g., no markdown code blocks, output the raw JSON string directly).
+    7. Language Adaptation: The generated micro-course MUST be in the EXACT same language as the user's question. If the user asks in English, the entire course content (including title, objectives, and section titles) must be in English. If the user asks in Chinese, it must be in Chinese.
     
     JSON Format:
     {

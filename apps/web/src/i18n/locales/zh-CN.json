@@ -48,11 +48,11 @@
     "newSession": "开始新对话",
     "skills": "技能中心",
     "memory": "记忆管理",
-    "knowledge": "临时知识库",
+    "knowledge": "用户文档",
     "prompts": "提示词库",
     "tools": "联网搜索",
     "kb_evol": "AI 知识自动进化",
-    "aiTrainer": "AI 培训师",
+    "aiTrainer": "角色扮演模拟",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
     "feedback": "反馈建议",
@@ -60,7 +60,7 @@
     "deleteSessionConfirm": "确定要删除这个会话吗？",
     "history": "历史记录",
     "tagline": "智能对话 · 无限可能",
-    "user": "AIESA USER",
+    "user": "CHRIS",
     "freePlan": "POC version"
   },
   "memory": {
@@ -75,7 +75,7 @@
     "createdAt": "创建时间"
   },
   "knowledge": {
-    "title": "临时知识库",
+    "title": "用户文档",
     "uploadFile": "上传",
     "addUrl": "URL",
     "addText": "文本",
@@ -149,7 +149,7 @@
     }
   },
   "input": {
-    "knowledge": "临时知识库",
+    "knowledge": "用户文档",
     "memory": "记忆",
     "webSearch": "联网搜索",
     "webSearchEnabled": "联网搜索 ✓"

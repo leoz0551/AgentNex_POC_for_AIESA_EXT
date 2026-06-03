@@ -10,6 +10,7 @@ interface MessageListProps {
   onCopy: (text: string, id: string) => void;
   onRegenerate: () => void;
   onFeedback: (messageId: string, feedback: 'like' | 'dislike') => void;
+  onShowCourse?: (taskId: string) => void;
 }
 
 export function MessageList({
@@ -20,6 +21,7 @@ export function MessageList({
   onCopy,
   onRegenerate,
   onFeedback,
+  onShowCourse,
 }: MessageListProps) {
   return (
     <div className="mx-auto max-w-3xl px-6 py-8 space-y-6">
@@ -31,6 +33,7 @@ export function MessageList({
           onCopy={onCopy}
           onRegenerate={onRegenerate}
           onFeedback={onFeedback}
+          onShowCourse={onShowCourse}
         />
       ))}
 

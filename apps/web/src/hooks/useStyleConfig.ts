@@ -51,8 +51,8 @@ export interface StyleConfig {
 }
 
 const DEFAULT_CONFIG: StyleConfig = {
-  name: 'AgentNex',
-  nameEn: 'AgentNex',
+  name: 'AI Trainer',
+  nameEn: 'AI Trainer',
   tagline: '智能对话 · 无限可能',
   taglineEn: 'Smart Chat · Infinite Possibilities',
   subtitle: 'AI 企业搜索智能体',
@@ -81,8 +81,8 @@ const DEFAULT_CONFIG: StyleConfig = {
   welcome: {
     title: '有什么可以帮你？',
     titleEn: 'How can I help you?',
-    subtitle: '选择一个话题开始，或直接输入你的问题',
-    subtitleEn: 'Choose a topic to start, or type your question directly',
+    subtitle: '我是你的AI培训师，如果在客服过程中遇到什么问题，可以随时问我。',
+    subtitleEn: 'I am your AI Trainer. If you encounter any problems during customer service, feel free to ask me.',
   },
   
   footerText: 'AI 可能会生成不准确的信息，请注意甄别',

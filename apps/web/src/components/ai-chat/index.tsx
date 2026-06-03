@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
-import { MessageSquare, Loader2, Zap, X, GripVertical } from 'lucide-react';
+import { MessageSquare, Loader2, Zap, X, GripVertical, GraduationCap, CheckCircle2, Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useSessions, useMemory, useKnowledge, useChat, useStyleConfig } from '../../hooks';
+import { useSessions, useMemory, useKnowledge, useChat, useStyleConfig, useCourse } from '../../hooks';
 import type { PanelView } from '../../types';
 import { Sidebar } from './Sidebar';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -36,7 +36,7 @@ export function AIChat() {
     return () => observer.disconnect();
   }, [theme]);
   const [panelView, setPanelView] = useState<PanelView>('none');
-  const [webSearchEnabled, setWebSearchEnabled] = useState(true);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false);
   const [skillsPanelWidth, setSkillsPanelWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
@@ -121,6 +121,22 @@ export function AIChat() {
     setCurrentSession,
     loadSessions,
   });
+
+  const {
+    showCourse,
+    setShowCourse,
+    courseData,
+    isCourseLoading,
+    isPlayingVoice,
+    isVoiceLoading,
+    handleVoiceExplain,
+    handleShowCourse
+  } = useCourse();
+
+  // 关闭课程面板（当切换对话时）
+  useEffect(() => {
+    setShowCourse(false);
+  }, [currentSession?.id, setShowCourse]);
 
   // 加载面板数据
   useEffect(() => {
@@ -266,7 +282,7 @@ export function AIChat() {
       </Suspense>
 
       {/* Main Content */}
-      <main className="flex flex-1 flex-col min-w-0 relative overflow-hidden">
+      <main className={`flex flex-col min-w-0 relative overflow-hidden transition-all duration-300 ${showCourse ? 'w-1/2 border-r border-border/40' : 'flex-1'}`}>
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: `${styleConfig.colors.primary}10` }} />
@@ -306,8 +322,6 @@ export function AIChat() {
             </div>
           ) : messages.length === 0 ? (
             <WelcomeScreen 
-              onSelectPrompt={setInputValue} 
-              onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
               brandConfig={styleConfig}
             />
           ) : (
@@ -319,6 +333,7 @@ export function AIChat() {
               onCopy={copyToClipboard}
               onRegenerate={handleRegenerate}
               onFeedback={handleFeedback}
+              onShowCourse={handleShowCourse}
             />
           )}
         </div>
@@ -341,6 +356,134 @@ export function AIChat() {
           />
         </div>
       </main>
+
+      {/* Right Course Area */}
+      {showCourse && (
+        <div className="w-1/2 h-full flex flex-col bg-background/80 backdrop-blur-xl border-l border-border/40 animate-in slide-in-from-right-8 duration-300 z-20">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 shrink-0 shadow-sm z-30">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <h2 className="text-base font-bold text-foreground tracking-tight">
+                {courseData?.course_title || t('aiTrainer.courseTitle')}
+              </h2>
+            </div>
+            <button 
+              onClick={() => setShowCourse(false)}
+              className="p-2 rounded-xl bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all shadow-sm"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-8 py-8 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            {isCourseLoading ? (
+               <div className="flex flex-col items-center justify-center h-full space-y-4">
+                 <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                 <p className="text-muted-foreground font-medium">Generating micro-course content...</p>
+               </div>
+            ) : courseData ? (
+               <div className="flex flex-col md:flex-row gap-8">
+                 {/* Main Content (Left) */}
+                 <div className="flex-1 prose prose-slate dark:prose-invert max-w-none text-foreground">
+                   {courseData.learning_objectives && courseData.learning_objectives.length > 0 && (
+                     <div className="mb-8" id="section-objectives">
+                       <h3 className="text-xl font-bold text-foreground mb-4">Learning Objectives</h3>
+                       <ul className="list-disc pl-5 space-y-2">
+                         {courseData.learning_objectives.map((obj: string, idx: number) => (
+                           <li key={idx} className="text-foreground/80">{obj}</li>
+                         ))}
+                       </ul>
+                     </div>
+                   )}
+                   {courseData.sections && courseData.sections.map((section: any, idx: number) => (
+                     <div key={idx} className="mb-8" id={`section-${idx}`}>
+                       <h3 className="text-xl font-bold text-foreground mb-4">{section.section_title}</h3>
+                       <div className="space-y-4">
+                         {section.content.map((paragraph: string, pIdx: number) => (
+                           <p key={pIdx} className="text-foreground/80 leading-relaxed">{paragraph}</p>
+                         ))}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+                 {/* Table of Contents (Right) */}
+                 <div className="w-48 shrink-0 hidden md:block border-l border-border/40 pl-6 space-y-6 self-start sticky top-0">
+                   <div>
+                     <h4 className="text-sm font-bold text-foreground mb-2">Topics</h4>
+                     <div className="w-1 h-4 bg-violet-500 absolute -ml-6 mt-1 rounded-r-md"></div>
+                     <ul className="space-y-3">
+                       <li 
+                         className="text-xs text-violet-500 font-medium cursor-pointer"
+                         onClick={() => {
+                           const el = document.getElementById('section-objectives');
+                           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                         }}
+                       >
+                         Learning Objectives
+                       </li>
+                       {courseData.sections && courseData.sections.map((section: any, idx: number) => (
+                         <li 
+                           key={idx} 
+                           className="text-xs text-muted-foreground hover:text-violet-500 cursor-pointer transition-colors"
+                           onClick={() => {
+                             const el = document.getElementById(`section-${idx}`);
+                             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                           }}
+                         >
+                           {section.section_title}
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 </div>
+               </div>
+            ) : (
+               <div className="flex flex-col items-center justify-center h-full space-y-4 text-muted-foreground">
+                 Course not found.
+               </div>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="px-6 py-5 border-t border-border/40 bg-background/80 flex justify-between items-center shrink-0">
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowCourse(false)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 font-bold transition-all shadow-sm"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t('aiTrainer.finish')}
+              </button>
+            </div>
+            
+            <button 
+              onClick={handleVoiceExplain}
+              disabled={isVoiceLoading}
+              className={`flex items-center gap-2 px-7 py-2.5 rounded-xl ${
+                isVoiceLoading 
+                  ? 'bg-accent text-muted-foreground cursor-not-allowed' 
+                  : isPlayingVoice 
+                    ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/20 text-white' 
+                    : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:scale-105 shadow-violet-500/20 text-white'
+              } font-bold shadow-md transition-all`}
+            >
+              {isVoiceLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlayingVoice ? (
+                <div className="w-3 h-3 bg-current mr-1"></div>
+              ) : (
+                <Bot className="h-4 w-4" />
+              )}
+              {isVoiceLoading ? t('common.loading') : isPlayingVoice ? 'Stop' : t('aiTrainer.voiceExplain')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Skills Studio Panel */}
       {skillsPanelOpen && (

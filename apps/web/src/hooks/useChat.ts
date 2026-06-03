@@ -86,7 +86,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
         role: m.role,
       })) || [];
 
-      await chatApi.chatStream(
+      await chatApi.trainerChatStream(
         [...messageHistory, { content: userMessage, role: 'user' }],
         currentSession?.id,
         (chunk) => {
@@ -111,14 +111,13 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
         (data) => {
           setCurrentSession(prev => {
             if (!prev) return prev;
-            // 如果是第一次对话（原始消息数为0），用用户消息前20字符作为标题
             const shouldUpdateTitle = originalMessageCountRef.current === 0;
             return {
               ...prev,
               id: data.session_id,
               title: shouldUpdateTitle ? userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '') : prev.title,
               messages: prev.messages.map(m =>
-                m.id === tempAiMsgId ? { ...m, content: data.full_content, id: `ai-${Date.now()}` } : m
+                m.id === tempAiMsgId ? { ...m, content: data.full_content || m.content, id: `ai-${Date.now()}`, courseTaskId: data.course_task_id } : m
               ),
             };
           });
@@ -137,8 +136,7 @@ export function useChat({ currentSession, setCurrentSession, loadSessions }: Use
               ),
             };
           });
-        },
-        chatBoardMode
+        }
       );
     } catch (error) {
       console.error('Chat error:', error);

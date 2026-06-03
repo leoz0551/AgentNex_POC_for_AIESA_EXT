@@ -48,11 +48,11 @@
     "newSession": "New Chat",
     "skills": "Skills",
     "memory": "Memory",
-    "knowledge": "Temporary KB",
+    "knowledge": "User Documents",
     "prompts": "Prompts Library",
     "tools": "Web Search",
     "kb_evol": "AI Knowledge Evoluate",
-    "aiTrainer": "AI Trainer",
+    "aiTrainer": "Role Play Simulation",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
     "feedback": "Feedback",
@@ -60,7 +60,7 @@
     "deleteSessionConfirm": "Are you sure you want to delete this session?",
     "history": "History",
     "tagline": "Smart Chat · Infinite Possibilities",
-    "user": "AIESA USER",
+    "user": "CHRIS",
     "freePlan": "POC version"
   },
   "memory": {
@@ -75,7 +75,7 @@
     "createdAt": "Created at"
   },
   "knowledge": {
-    "title": "Temporary KB",
+    "title": "User Documents",
     "uploadFile": "Upload",
     "addUrl": "URL",
     "addText": "Text",
@@ -149,7 +149,7 @@
     }
   },
   "input": {
-    "knowledge": "Temporary KB",
+    "knowledge": "User Documents",
     "memory": "Memory",
     "webSearch": "Web Search",
     "webSearchEnabled": "Web Search ✓"
