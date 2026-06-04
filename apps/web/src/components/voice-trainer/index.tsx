@@ -601,33 +601,49 @@ ${transcript}`;
 
       <audio ref={audioRef} autoPlay playsInline></audio>
 
-      <div className={`vt-stuck-backdrop ${stuckState.isOpen ? 'vt-active' : ''}`} onClick={closeStuckPanel}></div>
-      <div className={`vt-stuck-panel ${stuckState.isOpen ? 'vt-active' : ''}`}>
-        <div className="vt-stuck-header">
-          <h2>💡 Coaching Tips</h2>
-          <span className="vt-stuck-badge">PAUSED</span>
+      {stuckState.isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" 
+          onClick={closeStuckPanel}
+        />
+      )}
+      {stuckState.isOpen && (
+        <div className="absolute top-0 right-0 w-[450px] max-w-[95vw] h-full flex flex-col bg-background/95 backdrop-blur-xl border-l border-border/40 shadow-2xl animate-in slide-in-from-right-8 duration-300 z-50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 shrink-0 shadow-sm">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <span>💡</span> Coaching Tips
+            </h2>
+            <span className="text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300 rounded-full px-2 py-0.5">
+              PAUSED
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            {stuckState.isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full space-y-4">
+                <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-muted-foreground font-medium">Analyzing conversation…</span>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {stuckState.tips.map((t, i) => (
+                  <div className="p-4 rounded-xl bg-accent/50 border border-border/40 hover:bg-accent transition-colors" key={i}>
+                    <div className="text-sm font-bold text-violet-500 mb-2">Tip {i + 1} · {t.label}</div>
+                    <div className="text-sm text-foreground/80 leading-relaxed">{t.text}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="p-6 border-t border-border/40 bg-background/80 backdrop-blur-sm shrink-0">
+            <button 
+              className="w-full py-3 px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" 
+              onClick={closeStuckPanel}
+            >
+              ▶ Resume Conversation
+            </button>
+          </div>
         </div>
-        <div className="vt-stuck-body">
-          {stuckState.isLoading ? (
-            <div className="vt-stuck-loading">
-              <div className="vt-stuck-spinner"></div>
-              <span>Analyzing conversation…</span>
-            </div>
-          ) : (
-            <div className="vt-stuck-tips-container" style={{ display: 'block' }}>
-              {stuckState.tips.map((t, i) => (
-                <div className="vt-stuck-tip" key={i}>
-                  <div className="vt-stuck-tip-label">Tip {i + 1} · {t.label}</div>
-                  <div className="vt-stuck-tip-text">{t.text}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="vt-stuck-footer">
-          <button className="vt-btn-resume" onClick={closeStuckPanel}>▶ Resume Conversation</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

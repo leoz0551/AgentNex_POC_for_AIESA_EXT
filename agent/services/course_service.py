@@ -17,10 +17,44 @@ from config import MODEL_ID, MODEL_BASE_URL, OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
 
+import json
+import os
+from pathlib import Path
+
 # ==================== Task Store ====================
-# Simple in-memory store for course generation tasks.
-# For production, this should be moved to a database.
+# Simple file-backed store for course generation tasks.
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
+TASKS_FILE = DATA_DIR / "course_tasks.json"
+
 _course_tasks: Dict[str, Dict[str, Any]] = {}
+
+def _load_tasks():
+    global _course_tasks
+    if TASKS_FILE.exists():
+        try:
+            with open(TASKS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                _course_tasks = data
+        except Exception as e:
+            logger.error(f"Error loading course tasks: {e}")
+
+def _save_tasks():
+    try:
+        # Convert datetime objects to string for JSON serialization
+        import copy
+        tasks_copy = copy.deepcopy(_course_tasks)
+        for t_id, task in tasks_copy.items():
+            if isinstance(task.get("created_at"), datetime):
+                task["created_at"] = task["created_at"].isoformat()
+            if isinstance(task.get("updated_at"), datetime):
+                task["updated_at"] = task["updated_at"].isoformat()
+        with open(TASKS_FILE, "w", encoding="utf-8") as f:
+            json.dump(tasks_copy, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Error saving course tasks: {e}")
+
+_load_tasks()
 
 
 def create_course_task(session_id: str) -> str:
@@ -35,6 +69,7 @@ def create_course_task(session_id: str) -> str:
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     }
+    _save_tasks()
     logger.info(f"Created course task {task_id} for session {session_id}")
     return task_id
 
@@ -42,6 +77,10 @@ def create_course_task(session_id: str) -> str:
 def get_course_task(task_id: str) -> Optional[Dict[str, Any]]:
     """Retrieve a course generation task by ID."""
     return _course_tasks.get(task_id)
+
+def get_all_course_tasks() -> list:
+    """Retrieve all course generation tasks."""
+    return list(_course_tasks.values())
 
 
 def update_course_task(task_id: str, status: str, result: str = None, error: str = None):
@@ -51,6 +90,7 @@ def update_course_task(task_id: str, status: str, result: str = None, error: str
         _course_tasks[task_id]["result"] = result
         _course_tasks[task_id]["error"] = error
         _course_tasks[task_id]["updated_at"] = datetime.now()
+        _save_tasks()
 
 
 # ==================== Course Agent ====================

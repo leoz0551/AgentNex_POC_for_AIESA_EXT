@@ -38,6 +38,7 @@ class Message(BaseModel):
     role: str
     timestamp: datetime = Field(default_factory=datetime.now)
     feedback: Optional[str] = None
+    course_task_id: Optional[str] = None
 
 
 # ==================== 会话模型 ====================

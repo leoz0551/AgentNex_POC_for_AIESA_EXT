@@ -9,11 +9,25 @@ export const chatApi = {
     return data.sessions || [];
   },
 
+  // 获取所有微课程列表
+  async getCourses(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/course/list/all`);
+    if (!res.ok) throw new Error('Failed to fetch courses');
+    return res.json();
+  },
+
   // 获取会话详情
   async getSession(id: string): Promise<Session> {
     const res = await fetch(`${API_BASE}/sessions/${id}`);
     if (!res.ok) throw new Error('Session not found');
-    return res.json();
+    const session = await res.json();
+    if (session.messages) {
+      session.messages = session.messages.map((m: any) => ({
+        ...m,
+        courseTaskId: m.courseTaskId || m.course_task_id
+      }));
+    }
+    return session;
   },
 
   // 创建会话

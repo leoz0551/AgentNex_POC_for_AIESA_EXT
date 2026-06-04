@@ -213,7 +213,7 @@ export function AIChat() {
   }, [isResizing]);
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
+    <div className={`flex relative h-screen transition-colors duration-300 ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
       {/* Sidebar */}
       {sidebarOpen && (
         <Sidebar
@@ -282,7 +282,7 @@ export function AIChat() {
       </Suspense>
 
       {/* Main Content */}
-      <main className={`flex flex-col min-w-0 relative overflow-hidden transition-all duration-300 ${showCourse ? 'w-1/2 border-r border-border/40' : 'flex-1'}`}>
+      <main className="flex flex-col flex-1 min-w-0 relative overflow-hidden transition-all duration-300">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: `${styleConfig.colors.primary}10` }} />
@@ -359,7 +359,7 @@ export function AIChat() {
 
       {/* Right Course Area */}
       {showCourse && (
-        <div className="w-1/2 h-full flex flex-col bg-background/80 backdrop-blur-xl border-l border-border/40 animate-in slide-in-from-right-8 duration-300 z-20">
+        <div className="absolute top-0 right-0 w-[800px] max-w-[95vw] h-full flex flex-col bg-background/95 backdrop-blur-xl border-l border-border/40 shadow-2xl animate-in slide-in-from-right-8 duration-300 z-50">
           
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 shrink-0 shadow-sm z-30">

@@ -8,7 +8,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Any
 
-from services.course_service import get_course_task
+from typing import Optional, Any, List
+
+from services.course_service import get_course_task, get_all_course_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +37,17 @@ async def get_course_task_status(task_id: str):
         result=task["result"],
         error=task["error"]
     )
+
+@router.get("/list/all", response_model=List[CourseTaskResponse])
+async def list_course_tasks():
+    """获取所有微课程任务"""
+    tasks = get_all_course_tasks()
+    return [
+        CourseTaskResponse(
+            id=task["id"],
+            session_id=task["session_id"],
+            status=task["status"],
+            result=task["result"],
+            error=task["error"]
+        ) for task in tasks
+    ]

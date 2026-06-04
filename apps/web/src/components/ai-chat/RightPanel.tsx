@@ -58,9 +58,10 @@ interface RightPanelProps {
 
 const PANEL_WIDTH_KEY = 'legendagent_panel_width';
 const DEFAULT_PROMPTS_WIDTH = 480;
+const DEFAULT_AI_TRAINER_WIDTH = 500;
 const DEFAULT_WIDTH = 384;
 const MIN_WIDTH = 320;
-const MAX_WIDTH = 800;
+const MAX_WIDTH = 1200;
 
 export function RightPanel({
   panelView,
@@ -76,7 +77,7 @@ export function RightPanel({
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [panelWidth, setPanelWidth] = useState<{ prompts: number; other: number }>(() => {
+  const [panelWidth, setPanelWidth] = useState<{ prompts: number; ai_trainer: number; other: number }>(() => {
     // 从 localStorage 恢复宽度
     try {
       const saved = localStorage.getItem(PANEL_WIDTH_KEY);
@@ -84,6 +85,7 @@ export function RightPanel({
         const parsed = JSON.parse(saved);
         return {
           prompts: parsed.prompts || DEFAULT_PROMPTS_WIDTH,
+          ai_trainer: parsed.ai_trainer || DEFAULT_AI_TRAINER_WIDTH,
           other: parsed.other || DEFAULT_WIDTH,
         };
       }
@@ -92,12 +94,13 @@ export function RightPanel({
     }
     return {
       prompts: DEFAULT_PROMPTS_WIDTH,
+      ai_trainer: DEFAULT_AI_TRAINER_WIDTH,
       other: DEFAULT_WIDTH,
     };
   });
 
   // 获取当前宽度
-  const currentWidth = panelView === 'prompts' ? panelWidth.prompts : panelWidth.other;
+  const currentWidth = panelView === 'prompts' ? panelWidth.prompts : (panelView === 'ai_trainer' ? panelWidth.ai_trainer : panelWidth.other);
 
   // 保存宽度到 localStorage
   useEffect(() => {
@@ -129,7 +132,7 @@ export function RightPanel({
     
     setPanelWidth(prev => ({
       ...prev,
-      [panelView === 'prompts' ? 'prompts' : 'other']: clampedWidth,
+      [panelView === 'prompts' ? 'prompts' : (panelView === 'ai_trainer' ? 'ai_trainer' : 'other')]: clampedWidth,
     }));
   }, [isResizing, panelView]);
 

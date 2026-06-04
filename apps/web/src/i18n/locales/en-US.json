@@ -49,7 +49,7 @@
     "skills": "Skills",
     "memory": "Memory",
     "knowledge": "User Documents",
-    "prompts": "Prompts Library",
+    "prompts": "Course Library",
     "tools": "Web Search",
     "kb_evol": "AI Knowledge Evoluate",
     "aiTrainer": "Role Play Simulation",
@@ -121,8 +121,8 @@
     "webSearchEnabled": "AI will automatically search the web when needed"
   },
   "prompts": {
-    "title": "Prompts Library",
-    "description": "Select a prompt to quickly start a conversation, supports bilingual",
+    "title": "Course Library",
+    "description": "Select a course to quickly start a role play simulation",
     "configDescription": "Manage custom prompt categories and content",
     "addCustom": "Add Custom Prompt",
     "customCategory": "My Prompts",

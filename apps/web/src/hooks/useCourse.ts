@@ -4,6 +4,7 @@ import { chatApi } from '../api/chat';
 export function useCourse() {
   const [showCourse, setShowCourse] = useState(false);
   const [courseData, setCourseData] = useState<any>(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
@@ -184,7 +185,8 @@ export function useCourse() {
 
   const handleShowCourse = (taskId?: string) => {
     setShowCourse(true);
-    if (taskId && (!courseData || isCourseLoading)) {
+    if (taskId && taskId !== currentTaskId) {
+      setCurrentTaskId(taskId);
       pollCourseTask(taskId);
     }
   };

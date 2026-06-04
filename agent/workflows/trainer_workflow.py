@@ -95,7 +95,7 @@ class TrainerCourseWorkflow:
                 yield f"data: {json.dumps({'content': placeholder, 'done': False})}\n\n"
 
                 # Save AI reply to session
-                ai_msg = Message(content=full_content, role="assistant")
+                ai_msg = Message(content=full_content, role="assistant", course_task_id=task_id)
                 session_service.add_message(self.session_id, ai_msg)
 
                 # Final chunk with task_id for frontend polling
