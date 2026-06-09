@@ -68,6 +68,7 @@ export const Sidebar = memo(function Sidebar({
     { icon: BookOpen, label: t('sidebar.knowledge'), count: knowledgeDocsCount, key: 'knowledge', onClick: () => onOpenPanel(panelView === 'knowledge' ? 'none' : 'knowledge') },
     { icon: Search, label: t('sidebar.tools'), count: webSearchEnabled ? 1 : 0, countLabel: webSearchEnabled ? (i18n.language === 'zh-CN' ? '开' : 'On') : (i18n.language === 'zh-CN' ? '关' : 'Off'), key: 'tools', onClick: () => onOpenPanel(panelView === 'tools' ? 'none' : 'tools') },
     { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => onOpenPanel(panelView === 'ai_trainer' ? 'none' : 'ai_trainer') },
+    { icon: GraduationCap, label: t('sidebar.aiTrainerLocal'), key: 'ai_trainer_local', onClick: () => onOpenPanel(panelView === 'ai_trainer_local' ? 'none' : 'ai_trainer_local') },
   ], [t, sessions.length, memoriesCount, knowledgeDocsCount, webSearchEnabled, i18n.language, panelView, onOpenPanel]);
 
   const handleSessionClick = (id: string) => {
@@ -140,13 +141,13 @@ export const Sidebar = memo(function Sidebar({
                 key={item.key || item.label}
                 onClick={item.onClick}
                 className={`group flex w-full items-center justify-between rounded-xl px-2.5 md:px-3 py-2 md:py-2.5 text-sm transition-all duration-200 ${
-                  ('active' in item && item.active) || (item.key === 'memory' && panelView === 'memory') || (item.key === 'knowledge' && panelView === 'knowledge') || (item.key === 'tools' && panelView === 'tools') || (item.key === 'prompts' && panelView === 'prompts')
+                  ('active' in item && item.active) || (item.key === 'memory' && panelView === 'memory') || (item.key === 'knowledge' && panelView === 'knowledge') || (item.key === 'tools' && panelView === 'tools') || (item.key === 'prompts' && panelView === 'prompts') || (item.key === 'ai_trainer' && panelView === 'ai_trainer') || (item.key === 'ai_trainer_local' && panelView === 'ai_trainer_local')
                     ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 text-violet-700 dark:text-violet-300'
                     : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                 }`}
               >
                 <div className="flex items-center gap-2 md:gap-3">
-                  <div className={`p-1 md:p-1.5 rounded-lg transition-colors ${('active' in item && item.active) || (item.key === 'memory' && panelView === 'memory') || (item.key === 'knowledge' && panelView === 'knowledge') || (item.key === 'tools' && panelView === 'tools') || (item.key === 'prompts' && panelView === 'prompts') ? 'bg-violet-500/20' : 'group-hover:bg-accent'}`}>
+                  <div className={`p-1 md:p-1.5 rounded-lg transition-colors ${('active' in item && item.active) || (item.key === 'memory' && panelView === 'memory') || (item.key === 'knowledge' && panelView === 'knowledge') || (item.key === 'tools' && panelView === 'tools') || (item.key === 'prompts' && panelView === 'prompts') || (item.key === 'ai_trainer' && panelView === 'ai_trainer') || (item.key === 'ai_trainer_local' && panelView === 'ai_trainer_local') ? 'bg-violet-500/20' : 'group-hover:bg-accent'}`}>
                     <item.icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   </div>
                   <span className="font-medium text-sm">{item.label}</span>

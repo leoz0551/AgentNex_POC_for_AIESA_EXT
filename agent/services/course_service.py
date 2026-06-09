@@ -66,6 +66,7 @@ def create_course_task(session_id: str) -> str:
         "status": "generating",
         "result": None,
         "error": None,
+        "is_saved": False,
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     }
@@ -92,6 +93,18 @@ def update_course_task(task_id: str, status: str, result: str = None, error: str
         _course_tasks[task_id]["updated_at"] = datetime.now()
         _save_tasks()
 
+def delete_course_task(task_id: str):
+    """Delete a course generation task."""
+    if task_id in _course_tasks:
+        del _course_tasks[task_id]
+        _save_tasks()
+
+def save_course_task(task_id: str):
+    """Mark a course generation task as saved."""
+    if task_id in _course_tasks:
+        _course_tasks[task_id]["is_saved"] = True
+        _course_tasks[task_id]["updated_at"] = datetime.now()
+        _save_tasks()
 
 # ==================== Course Agent ====================
 

@@ -16,6 +16,16 @@ export const chatApi = {
     return res.json();
   },
 
+  // 保存课程
+  async saveCourse(taskId: string): Promise<void> {
+    await fetch(`${API_BASE}/course/${taskId}/save`, { method: 'POST' });
+  },
+
+  // 删除课程
+  async deleteCourse(taskId: string): Promise<void> {
+    await fetch(`${API_BASE}/course/${taskId}`, { method: 'DELETE' });
+  },
+
   // 获取会话详情
   async getSession(id: string): Promise<Session> {
     const res = await fetch(`${API_BASE}/sessions/${id}`);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, Search, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { chatApi } from '../../api/chat';
 
@@ -11,10 +11,11 @@ interface CourseItem {
 
 interface PromptsPanelProps {
   onPromptSelect: (prompt: string) => void;
+  onCourseSelect?: (taskId: string) => void;
   onOpenSettings?: () => void;
 }
 
-export function PromptsPanel({ onPromptSelect }: PromptsPanelProps) {
+export function PromptsPanel({ onPromptSelect, onCourseSelect }: PromptsPanelProps) {
   const { t } = useTranslation();
   
   const [courses, setCourses] = useState<CourseItem[]>([]);
@@ -75,8 +76,22 @@ export function PromptsPanel({ onPromptSelect }: PromptsPanelProps) {
   }, []);
 
   const handleCourseClick = (course: CourseItem) => {
-    // We send a default prompt to start Role Play Simulation for this course
-    onPromptSelect(`I want to start the role play simulation for the course: "${course.title}".\n\nObjective: ${course.description}`);
+    if (onCourseSelect) {
+      onCourseSelect(course.id);
+    } else {
+      // Fallback
+      onPromptSelect(`I want to start the role play simulation for the course: "${course.title}".\n\nObjective: ${course.description}`);
+    }
+  };
+
+  const handleDeleteCourse = async (e: React.MouseEvent, courseId: string) => {
+    e.stopPropagation();
+    try {
+      await chatApi.deleteCourse(courseId);
+      setCourses(courses => courses.filter(c => c.id !== courseId));
+    } catch (err) {
+      console.error('Failed to delete course:', err);
+    }
   };
 
   const filteredCourses = courses.filter(c => 
@@ -115,10 +130,10 @@ export function PromptsPanel({ onPromptSelect }: PromptsPanelProps) {
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
-                className="group bg-card border border-border/40 rounded-lg p-3 cursor-pointer hover:border-violet-500/40 hover:shadow-sm transition-all duration-200 hover:bg-accent/30"
+                className="group relative bg-card border border-border/40 rounded-lg p-3 cursor-pointer hover:border-violet-500/40 hover:shadow-sm transition-all duration-200 hover:bg-accent/30"
                 onClick={() => handleCourseClick(course)}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 pr-6">
                   <div className="flex-shrink-0 mt-0.5">
                     <BookOpen className="h-4 w-4 text-violet-500" />
                   </div>
@@ -131,6 +146,13 @@ export function PromptsPanel({ onPromptSelect }: PromptsPanelProps) {
                     </p>
                   </div>
                 </div>
+                <button
+                  onClick={(e) => handleDeleteCourse(e, course.id)}
+                  className="absolute top-2 right-2 p-1.5 text-muted-foreground hover:text-red-500 bg-background/80 hover:bg-red-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                  title="Delete course"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
           </div>

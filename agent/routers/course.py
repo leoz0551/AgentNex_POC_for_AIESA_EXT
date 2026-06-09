@@ -10,7 +10,7 @@ from typing import Optional, Any
 
 from typing import Optional, Any, List
 
-from services.course_service import get_course_task, get_all_course_tasks
+from services.course_service import get_course_task, get_all_course_tasks, delete_course_task, save_course_task
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,9 @@ async def get_course_task_status(task_id: str):
 
 @router.get("/list/all", response_model=List[CourseTaskResponse])
 async def list_course_tasks():
-    """获取所有微课程任务"""
+    """获取所有已保存的微课程任务"""
     tasks = get_all_course_tasks()
+    # 兼容老数据：如果没有is_saved字段，默认当作已保存
     return [
         CourseTaskResponse(
             id=task["id"],
@@ -49,5 +50,23 @@ async def list_course_tasks():
             status=task["status"],
             result=task["result"],
             error=task["error"]
-        ) for task in tasks
+        ) for task in tasks if task.get("is_saved", True)
     ]
+
+@router.delete("/{task_id}")
+async def delete_course(task_id: str):
+    """删除微课程任务"""
+    task = get_course_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    delete_course_task(task_id)
+    return {"status": "success"}
+
+@router.post("/{task_id}/save")
+async def save_course(task_id: str):
+    """保存微课程任务"""
+    task = get_course_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    save_course_task(task_id)
+    return {"status": "success"}

@@ -7,6 +7,7 @@ import { KnowledgePanel } from './KnowledgePanel';
 import { ToolsPanel } from './ToolsPanel';
 import { PromptsPanel } from './PromptsPanel';
 import { VoiceTrainer } from '../voice-trainer';
+import { VoiceTrainerLocal } from '../voice-trainer-local';
 import { Button } from '@workspace/ui/components/button';
 
 interface RightPanelProps {
@@ -53,6 +54,7 @@ interface RightPanelProps {
   onToggleWebSearch: () => void;
   // Prompts
   onPromptSelect: (prompt: string) => void;
+  onCourseSelect?: (taskId: string) => void;
   onOpenSettings?: () => void;
 }
 
@@ -72,6 +74,7 @@ export function RightPanel({
   memoryError,
   memoryLoading,
   onPromptSelect,
+  onCourseSelect,
   ...knowledgeProps
 }: RightPanelProps) {
   const { t } = useTranslation();
@@ -100,7 +103,7 @@ export function RightPanel({
   });
 
   // 获取当前宽度
-  const currentWidth = panelView === 'prompts' ? panelWidth.prompts : (panelView === 'ai_trainer' ? panelWidth.ai_trainer : panelWidth.other);
+  const currentWidth = panelView === 'prompts' ? panelWidth.prompts : (panelView === 'ai_trainer' || panelView === 'ai_trainer_local' ? panelWidth.ai_trainer : panelWidth.other);
 
   // 保存宽度到 localStorage
   useEffect(() => {
@@ -132,7 +135,7 @@ export function RightPanel({
     
     setPanelWidth(prev => ({
       ...prev,
-      [panelView === 'prompts' ? 'prompts' : (panelView === 'ai_trainer' ? 'ai_trainer' : 'other')]: clampedWidth,
+      [panelView === 'prompts' ? 'prompts' : (panelView === 'ai_trainer' || panelView === 'ai_trainer_local' ? 'ai_trainer' : 'other')]: clampedWidth,
     }));
   }, [isResizing, panelView]);
 
@@ -170,6 +173,7 @@ export function RightPanel({
       case 'tools': return t('tools.title');
       case 'prompts': return t('prompts.title');
       case 'ai_trainer': return t('sidebar.aiTrainer');
+      case 'ai_trainer_local': return t('sidebar.aiTrainerLocal');
       default: return '';
     }
   };
@@ -220,7 +224,7 @@ export function RightPanel({
                   {panelView === 'knowledge' && <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                   {panelView === 'tools' && <Wand2 className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                   {panelView === 'prompts' && <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
-                  {panelView === 'ai_trainer' && <GraduationCap className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
+                  {(panelView === 'ai_trainer' || panelView === 'ai_trainer_local') && <GraduationCap className="h-4 w-4 md:h-5 md:w-5 text-white animate-shimmer" />}
                 </div>
               </div>
               {/* Title with gradient text */}
@@ -292,11 +296,14 @@ export function RightPanel({
           )}
 
           {panelView === 'prompts' && (
-            <PromptsPanel onPromptSelect={onPromptSelect} onOpenSettings={knowledgeProps.onOpenSettings} />
+            <PromptsPanel onPromptSelect={onPromptSelect} onCourseSelect={onCourseSelect} onOpenSettings={knowledgeProps.onOpenSettings} />
           )}
 
           {panelView === 'ai_trainer' && (
             <VoiceTrainer />
+          )}
+          {panelView === 'ai_trainer_local' && (
+            <VoiceTrainerLocal />
           )}
         </div>
       </div>

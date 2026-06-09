@@ -53,6 +53,7 @@
     "tools": "联网搜索",
     "kb_evol": "AI 知识自动进化",
     "aiTrainer": "角色扮演模拟",
+    "aiTrainerLocal": "本地角色扮演模拟",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
     "feedback": "反馈建议",
@@ -122,7 +123,7 @@
   },
   "prompts": {
     "title": "Course Library",
-    "description": "选择一个课程以快速开始模拟演练",
+    "description": "选择一个课程，通过语音学习详细内容",
     "configDescription": "管理自定义提示词分类和内容",
     "addCustom": "添加自定义提示词",
     "customCategory": "我的提示词",

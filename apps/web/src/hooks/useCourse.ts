@@ -5,6 +5,7 @@ export function useCourse() {
   const [showCourse, setShowCourse] = useState(false);
   const [courseData, setCourseData] = useState<any>(null);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [courseMode, setCourseMode] = useState<'edit' | 'view'>('edit');
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
@@ -183,10 +184,12 @@ export function useCourse() {
     }, 2000);
   };
 
-  const handleShowCourse = (taskId?: string) => {
+  const handleShowCourse = (taskId?: string, mode: 'edit' | 'view' = 'edit') => {
     setShowCourse(true);
+    setCourseMode(mode);
     if (taskId && taskId !== currentTaskId) {
       setCurrentTaskId(taskId);
+      setCourseData(null); // Clear previous course data
       pollCourseTask(taskId);
     }
   };
@@ -199,6 +202,8 @@ export function useCourse() {
     isPlayingVoice,
     isVoiceLoading,
     handleVoiceExplain,
-    handleShowCourse
+    handleShowCourse,
+    currentTaskId,
+    courseMode
   };
 }

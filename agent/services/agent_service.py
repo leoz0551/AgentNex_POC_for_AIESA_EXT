@@ -236,3 +236,90 @@ def create_agent_with_memory_tools(user_id: str = "default") -> Agent:
         update_memory_on_run=False,
         add_memories_to_context=False,
     )
+
+
+def create_evaluator_agent(user_id: str = "default") -> Agent:
+    """
+    Create a Voice Evaluator Agent
+    Used to evaluate the role-play simulation
+    """
+    instructions = """# Role
+You are the Quality Evaluator for the ServiceSim training system. Analyze the provided role-play transcript between the Trainee (Service Officer) and the Customer.
+
+# Evaluation Criteria
+Grade the trainee on each category and return each category's actual score (not percentage):
+- Professionalism      (max 20 pts): Greeting, tone, professional language, asking for customer's name.
+- Empathy              (max 15 pts): Thanking the customer, acknowledging their issue/frustration.
+- Information Gathering(max 15 pts): Paraphrasing and confirming understanding (e.g., "Just to confirm...").
+- Technical Logic      (max 15 pts): Basic troubleshooting steps (power cycle, cable check, etc.).
+- Expectation Management(max 15 pts): Explaining repair timelines (1-2 days or 7-10 days if parts unavailable).
+- Policy Adherence     (max 10 pts): Explaining warranty limits, job sheet creation, serial number recording.
+- Overall Experience   (max 10 pts): General interaction quality.
+
+# Output Format
+Return ONLY valid JSON — no markdown, no explanation:
+{
+  "overall": <integer 0-100, sum of all category scores>,
+  "scores": {
+    "Professionalism":       { "score": <0-20>, "max": 20 },
+    "Empathy":               { "score": <0-15>, "max": 15 },
+    "Information Gathering": { "score": <0-15>, "max": 15 },
+    "Technical Logic":       { "score": <0-15>, "max": 15 },
+    "Expectation Management":{ "score": <0-15>, "max": 15 },
+    "Policy Adherence":      { "score": <0-10>, "max": 10 },
+    "Overall Experience":    { "score": <0-10>, "max": 10 }
+  },
+  "what_went_well":        ["<strength 1>", "<strength 2>", "<strength 3>"],
+  "areas_for_improvement": ["<point 1>", "<point 2>", "<point 3>"],
+  "the_better_way":        "<short example script showing better handling>",
+  "eodb":                  ["<feedback 1>", "<feedback 2>"]
+}"""
+
+    return Agent(
+        model=OpenAIChat(
+            id=MODEL_ID,
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            temperature=0.3
+        ),
+        markdown=False,
+        instructions=instructions,
+        user_id=user_id,
+        update_memory_on_run=False,
+    )
+
+
+def create_voice_trainer_stuck_agent(user_id: str = "default") -> Agent:
+    """
+    Create a Voice Trainer Stuck Agent
+    Used to generate tips when trainee is stuck
+    """
+    instructions = """You are a coaching assistant for a customer service training simulation.
+The trainee (Service Officer) is feeling stuck mid-conversation. Analyze the conversation and provide 3-4 concise, specific coaching tips for what they should say or do NEXT.
+
+Rules:
+- Be actionable and specific to the current context, not generic advice.
+- Do NOT reveal what the customer will say next.
+- Do NOT break the simulation scenario.
+- Keep each tip to 1-2 sentences.
+
+Return ONLY valid JSON:
+{
+  "tips": [
+    { "label": "<short tip title>", "text": "<specific actionable advice>" },
+    ...
+  ]
+}"""
+
+    return Agent(
+        model=OpenAIChat(
+            id=MODEL_ID,
+            api_key=OPENROUTER_API_KEY,
+            base_url=MODEL_BASE_URL,
+            temperature=0.4
+        ),
+        markdown=False,
+        instructions=instructions,
+        user_id=user_id,
+        update_memory_on_run=False,
+    )

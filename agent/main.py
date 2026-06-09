@@ -38,6 +38,7 @@ from routers import (
     course_router,
 )
 from routers.kb_evol import router as kb_evol_router
+from routers.simulation import router as simulation_router
 from services.session_service import session_service
 
 # 配置日志
@@ -91,6 +92,7 @@ app.include_router(data_router, prefix="/api/data", tags=["Data"])
 app.include_router(kb_evol_router)
 app.include_router(trainer_router)
 app.include_router(course_router)
+app.include_router(simulation_router)
 
 # ==================== 根端点 ====================
 

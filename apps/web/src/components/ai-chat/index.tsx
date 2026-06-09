@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
-import { MessageSquare, Loader2, Zap, X, GripVertical, GraduationCap, CheckCircle2, Bot } from 'lucide-react';
+import { MessageSquare, Loader2, Zap, X, GripVertical, GraduationCap, CheckCircle2, Volume2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSessions, useMemory, useKnowledge, useChat, useStyleConfig, useCourse } from '../../hooks';
+import { chatApi } from '../../api/chat';
 import type { PanelView } from '../../types';
 import { Sidebar } from './Sidebar';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -130,7 +131,9 @@ export function AIChat() {
     isPlayingVoice,
     isVoiceLoading,
     handleVoiceExplain,
-    handleShowCourse
+    handleShowCourse,
+    currentTaskId,
+    courseMode
   } = useCourse();
 
   // 关闭课程面板（当切换对话时）
@@ -277,6 +280,7 @@ export function AIChat() {
           webSearchEnabled={webSearchEnabled}
           onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}
           onPromptSelect={handlePromptSelect}
+          onCourseSelect={(id) => handleShowCourse(id, 'view')}
           onOpenSettings={() => setBrandSettingsOpen(true)}
         />
       </Suspense>
@@ -450,36 +454,61 @@ export function AIChat() {
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-5 border-t border-border/40 bg-background/80 flex justify-between items-center shrink-0">
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowCourse(false)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 font-bold transition-all shadow-sm"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                {t('aiTrainer.finish')}
-              </button>
+          <div className="px-6 py-3 border-t border-border/40 bg-background/80 flex justify-between items-center shrink-0">
+            <div className="flex gap-2">
+              {courseMode === 'edit' && (
+                <>
+                  <button 
+                    onClick={async () => {
+                       if (currentTaskId) {
+                         try {
+                           await chatApi.saveCourse(currentTaskId);
+                         } catch(e) {}
+                       }
+                       setShowCourse(false);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 text-sm font-medium transition-all shadow-sm"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Save
+                  </button>
+                  <button 
+                    onClick={async () => {
+                       if (currentTaskId) {
+                         try {
+                           await chatApi.deleteCourse(currentTaskId);
+                         } catch(e) {}
+                       }
+                       setShowCourse(false);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium transition-all shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                    Discard
+                  </button>
+                </>
+              )}
             </div>
             
             <button 
               onClick={handleVoiceExplain}
               disabled={isVoiceLoading}
-              className={`flex items-center gap-2 px-7 py-2.5 rounded-xl ${
+              title={isVoiceLoading ? t('common.loading') : isPlayingVoice ? 'Stop' : t('aiTrainer.voiceExplain')}
+              className={`flex items-center justify-center w-8 h-8 rounded-full ${
                 isVoiceLoading 
                   ? 'bg-accent text-muted-foreground cursor-not-allowed' 
                   : isPlayingVoice 
                     ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/20 text-white' 
                     : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:scale-105 shadow-violet-500/20 text-white'
-              } font-bold shadow-md transition-all`}
+              } shadow-md transition-all`}
             >
               {isVoiceLoading ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : isPlayingVoice ? (
-                <div className="w-3 h-3 bg-current mr-1"></div>
+                <div className="w-2.5 h-2.5 bg-current rounded-sm"></div>
               ) : (
-                <Bot className="h-4 w-4" />
+                <Volume2 className="h-4 w-4" />
               )}
-              {isVoiceLoading ? t('common.loading') : isPlayingVoice ? 'Stop' : t('aiTrainer.voiceExplain')}
             </button>
           </div>
         </div>

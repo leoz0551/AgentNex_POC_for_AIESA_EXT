@@ -44,15 +44,16 @@
     }
   },
   "sidebar": {
-    "sessions": "All Chats",
+    "sessions": "Chat Sessions",
     "newSession": "New Chat",
     "skills": "Skills",
     "memory": "Memory",
-    "knowledge": "User Documents",
+    "knowledge": "Knowledge Base",
     "prompts": "Course Library",
     "tools": "Web Search",
     "kb_evol": "AI Knowledge Evoluate",
     "aiTrainer": "Role Play Simulation",
+    "aiTrainerLocal": "Role Play Simu Local",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
     "feedback": "Feedback",
@@ -122,7 +123,7 @@
   },
   "prompts": {
     "title": "Course Library",
-    "description": "Select a course to quickly start a role play simulation",
+    "description": "Select a course to learn the detail by voice",
     "configDescription": "Manage custom prompt categories and content",
     "addCustom": "Add Custom Prompt",
     "customCategory": "My Prompts",
