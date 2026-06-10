@@ -1,10 +1,20 @@
 // 根据环境变量确定API基础URL
 const isProduction = import.meta.env.MODE === 'production';
-export const API_BASE = isProduction 
-  ? 'http://10.62.79.180:8000' 
-  : 'http://localhost:8000';
 
-export const LOCAL_VOICE_WS_URL = import.meta.env.VITE_LOCAL_VOICE_WS_URL || 'ws://127.0.0.1:8005/ws/v2/voice';
+// 1. 后端常规 API
+export const API_BASE = isProduction 
+  ? '/api' 
+  : 'http://localhost:8001';
+
+// 2. 课程详情文字转语音 (TTS WS)
+export const TTS_WS_URL = isProduction 
+  ? `wss://${window.location.host}/voice-ws/ws/v1/tts`
+  : 'ws://127.0.0.1:8005/ws/v1/tts';
+
+// 3. 角色扮演双工语音 (Voice WS)
+export const LOCAL_VOICE_WS_URL = isProduction 
+  ? `wss://${window.location.host}/voice-ws/ws/v2/voice`
+  : 'ws://127.0.0.1:8005/ws/v2/voice';
 
 export const USER_ID = 'default';
 

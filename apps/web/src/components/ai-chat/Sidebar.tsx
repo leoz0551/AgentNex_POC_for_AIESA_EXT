@@ -67,7 +67,7 @@ export const Sidebar = memo(function Sidebar({
     { icon: Sparkles, label: t('sidebar.prompts'), key: 'prompts', onClick: () => onOpenPanel(panelView === 'prompts' ? 'none' : 'prompts') },
     { icon: BookOpen, label: t('sidebar.knowledge'), count: knowledgeDocsCount, key: 'knowledge', onClick: () => onOpenPanel(panelView === 'knowledge' ? 'none' : 'knowledge') },
     { icon: Search, label: t('sidebar.tools'), count: webSearchEnabled ? 1 : 0, countLabel: webSearchEnabled ? (i18n.language === 'zh-CN' ? '开' : 'On') : (i18n.language === 'zh-CN' ? '关' : 'Off'), key: 'tools', onClick: () => onOpenPanel(panelView === 'tools' ? 'none' : 'tools') },
-    { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => onOpenPanel(panelView === 'ai_trainer' ? 'none' : 'ai_trainer') },
+    // { icon: GraduationCap, label: t('sidebar.aiTrainer'), key: 'ai_trainer', onClick: () => onOpenPanel(panelView === 'ai_trainer' ? 'none' : 'ai_trainer') },
     { icon: GraduationCap, label: t('sidebar.aiTrainerLocal'), key: 'ai_trainer_local', onClick: () => onOpenPanel(panelView === 'ai_trainer_local' ? 'none' : 'ai_trainer_local') },
   ], [t, sessions.length, memoriesCount, knowledgeDocsCount, webSearchEnabled, i18n.language, panelView, onOpenPanel]);
 

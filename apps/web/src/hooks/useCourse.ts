@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { chatApi } from '../api/chat';
+import { TTS_WS_URL } from '../constants';
 
 export function useCourse() {
   const [showCourse, setShowCourse] = useState(false);
@@ -78,14 +79,7 @@ export function useCourse() {
 
     setIsVoiceLoading(true);
     
-    let voiceUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8005';
-    if (voiceUrl.includes('127.0.0.1') || voiceUrl.includes('0.0.0.0')) {
-      const portMatch = voiceUrl.match(/:(\d+)/);
-      const port = portMatch ? portMatch[1] : '8005';
-      voiceUrl = `ws://${window.location.hostname}:${port}`;
-    }
-
-    const ws = new WebSocket(`${voiceUrl}/ws/v1/tts`);
+    const ws = new WebSocket(TTS_WS_URL);
     ws.binaryType = 'blob';
     wsRef.current = ws;
 
