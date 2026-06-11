@@ -51,12 +51,12 @@ export interface StyleConfig {
 }
 
 const DEFAULT_CONFIG: StyleConfig = {
-  name: 'AI Trainer',
-  nameEn: 'AI Trainer',
+  name: 'AI Coach',
+  nameEn: 'AI Coach',
   tagline: '智能对话 · 无限可能',
   taglineEn: 'Smart Chat · Infinite Possibilities',
-  subtitle: 'AI 企业搜索智能体',
-  subtitleEn: 'AI Enterprise Search Agent',
+  subtitle: 'AI Coach智能体',
+  subtitleEn: 'AI Coach Agent',
   
   logo: {
     type: 'generated',
