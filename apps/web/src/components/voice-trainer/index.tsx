@@ -332,41 +332,37 @@ export function VoiceTrainer() {
 
     handleStatus('thinking', 'Generating evaluation…');
 
-    setMessages(currentMessages => {
-        if (currentMessages.length === 0) {
-            handleStatus('', 'No conversation to evaluate');
-            return currentMessages;
-        }
+    if (messages.length === 0) {
+        handleStatus('', 'No conversation to evaluate');
+        return;
+    }
 
-        const transcript = currentMessages
-            .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text}`)
-            .join('\n');
+    const transcript = messages
+        .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text}`)
+        .join('\n');
 
-        fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-            model: EVAL_MODEL,
-            temperature: 0.3,
-            response_format: { type: 'json_object' },
-            messages: [{ role: 'user', content: buildEvalPrompt(transcript) }]
-            })
-        }).then(res => {
-            if (!res.ok) throw new Error(`Eval API error: HTTP ${res.status}`);
-            return res.json();
-        }).then(data => {
-            const result = JSON.parse(data.choices[0].message.content);
-            setEvaluation(result);
-            handleStatus('', 'Evaluation complete');
-        }).catch((err: any) => {
-            console.error(err);
-            handleStatus('error', 'Evaluation failed: ' + err.message);
-        });
-
-        return currentMessages;
+    fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+        model: EVAL_MODEL,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: buildEvalPrompt(transcript) }]
+        })
+    }).then(res => {
+        if (!res.ok) throw new Error(`Eval API error: HTTP ${res.status}`);
+        return res.json();
+    }).then(data => {
+        const result = JSON.parse(data.choices[0].message.content);
+        setEvaluation(result);
+        handleStatus('', 'Evaluation complete');
+    }).catch((err: any) => {
+        console.error(err);
+        handleStatus('error', 'Evaluation failed: ' + err.message);
     });
   };
 
@@ -381,17 +377,16 @@ export function VoiceTrainer() {
     setStuckState({ isOpen: true, isLoading: true, tips: [] });
     handleStatus('paused', '⏸ Paused');
 
-    setMessages(currentMessages => {
-        if (currentMessages.length === 0) {
-            setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Tip', text: 'The conversation has not started yet. Introduce yourself and ask how you can help the customer.' }] });
-            return currentMessages;
-        }
+    if (messages.length === 0) {
+        setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Tip', text: 'The conversation has not started yet. Introduce yourself and ask how you can help the customer.' }] });
+        return;
+    }
 
-        const transcript = currentMessages
-            .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text}`)
-            .join('\n');
+    const transcript = messages
+        .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text}`)
+        .join('\n');
 
-        const prompt = `You are a coaching assistant for a customer service training simulation.
+    const prompt = `You are a coaching assistant for a customer service training simulation.
 The trainee (Service Officer) is feeling stuck mid-conversation. Analyze the conversation and provide 3-4 concise, specific coaching tips for what they should say or do NEXT.
 
 Rules:
@@ -411,23 +406,20 @@ Return ONLY valid JSON:
 Conversation so far:
 ${transcript}`;
 
-        fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-            model: EVAL_MODEL,
-            temperature: 0.4,
-            response_format: { type: 'json_object' },
-            messages: [{ role: 'user', content: prompt }]
-            })
-        }).then(res => res.json()).then(data => {
-            const result = JSON.parse(data.choices[0].message.content);
-            setStuckState({ isOpen: true, isLoading: false, tips: result.tips || [] });
-        }).catch(_err => {
-            setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Error', text: 'Could not generate tips. Check your connection and try again.' }] });
-        });
-
-        return currentMessages;
+    fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+        model: EVAL_MODEL,
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: prompt }]
+        })
+    }).then(res => res.json()).then(data => {
+        const result = JSON.parse(data.choices[0].message.content);
+        setStuckState({ isOpen: true, isLoading: false, tips: result.tips || [] });
+    }).catch(_err => {
+        setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Error', text: 'Could not generate tips. Check your connection and try again.' }] });
     });
   };
 

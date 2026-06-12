@@ -370,35 +370,31 @@ export function VoiceTrainerLocal() {
     setIsEvaluating(true);
     handleStatus('thinking', 'Generating evaluation…');
 
-    setMessages(currentMessages => {
-        if (currentMessages.length === 0) {
-            setIsEvaluating(false);
-            handleStatus('', 'No conversation to evaluate');
-            return currentMessages;
-        }
+    if (messages.length === 0) {
+        setIsEvaluating(false);
+        handleStatus('', 'No conversation to evaluate');
+        return;
+    }
 
-        const transcript = currentMessages
-            .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text.replace('__DONE__', '')}`)
-            .join('\n');
+    const transcript = messages
+        .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text.replace('__DONE__', '')}`)
+        .join('\n');
 
-        fetch(`${API_BASE}/simulation/evaluate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript })
-        }).then(res => {
-            if (!res.ok) throw new Error(`Eval API error: HTTP ${res.status}`);
-            return res.json();
-        }).then(data => {
-            setEvaluation(data);
-            setIsEvaluating(false);
-            handleStatus('', 'Evaluation complete');
-        }).catch((err: any) => {
-            console.error(err);
-            setIsEvaluating(false);
-            handleStatus('error', 'Evaluation failed: ' + err.message);
-        });
-
-        return currentMessages;
+    fetch(`${API_BASE}/simulation/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript })
+    }).then(res => {
+        if (!res.ok) throw new Error(`Eval API error: HTTP ${res.status}`);
+        return res.json();
+    }).then(data => {
+        setEvaluation(data);
+        setIsEvaluating(false);
+        handleStatus('', 'Evaluation complete');
+    }).catch((err: any) => {
+        console.error(err);
+        setIsEvaluating(false);
+        handleStatus('error', 'Evaluation failed: ' + err.message);
     });
   };
 
@@ -411,27 +407,23 @@ export function VoiceTrainerLocal() {
     setStuckState({ isOpen: true, isLoading: true, tips: [] });
     handleStatus('paused', '⏸ Paused');
 
-    setMessages(currentMessages => {
-        if (currentMessages.length === 0) {
-            setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Tip', text: 'The conversation has not started yet. Introduce yourself and ask how you can help the customer.' }] });
-            return currentMessages;
-        }
+    if (messages.length === 0) {
+        setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Tip', text: 'The conversation has not started yet. Introduce yourself and ask how you can help the customer.' }] });
+        return;
+    }
 
-        const transcript = currentMessages
-            .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text.replace('__DONE__', '')}`)
-            .join('\n');
+    const transcript = messages
+        .map(m => `${m.speaker === 'user' ? 'Trainee' : 'Customer'}: ${m.text.replace('__DONE__', '')}`)
+        .join('\n');
 
-        fetch(`${API_BASE}/simulation/stuck`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript })
-        }).then(res => res.json()).then(data => {
-            setStuckState({ isOpen: true, isLoading: false, tips: data.tips || [] });
-        }).catch(_err => {
-            setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Error', text: 'Could not generate tips. Check your connection and try again.' }] });
-        });
-
-        return currentMessages;
+    fetch(`${API_BASE}/simulation/stuck`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript })
+    }).then(res => res.json()).then(data => {
+        setStuckState({ isOpen: true, isLoading: false, tips: data.tips || [] });
+    }).catch(_err => {
+        setStuckState({ isOpen: true, isLoading: false, tips: [{ label: 'Error', text: 'Could not generate tips. Check your connection and try again.' }] });
     });
   };
 
@@ -629,29 +621,45 @@ export function VoiceTrainerLocal() {
       </main>
 
       {stuckState.isOpen && (
-        <div className="vt-stuck-overlay">
-          <div className="vt-stuck-panel">
-            <button className="vt-stuck-close" onClick={closeStuckPanel}>✕</button>
-            <div className="vt-stuck-title">💡 Coaching Tips</div>
-            
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" 
+          onClick={closeStuckPanel}
+        />
+      )}
+      {stuckState.isOpen && (
+        <div className="absolute top-0 right-0 w-[450px] max-w-[95vw] h-full flex flex-col bg-background/95 backdrop-blur-xl border-l border-border/40 shadow-2xl animate-in slide-in-from-right-8 duration-300 z-50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 shrink-0 shadow-sm">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <span>💡</span> Coaching Tips
+            </h2>
+            <span className="text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300 rounded-full px-2 py-0.5">
+              PAUSED
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
             {stuckState.isLoading ? (
-              <div className="vt-stuck-loading">
-                <div className="vt-stuck-spinner"></div>
-                <p>Analyzing conversation and generating tips...</p>
+              <div className="flex flex-col items-center justify-center h-full space-y-4">
+                <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-muted-foreground font-medium">Analyzing conversation…</span>
               </div>
             ) : (
-              <div className="vt-stuck-content">
-                {stuckState.tips.map((tip, i) => (
-                  <div key={i} className="vt-tip-card">
-                    <div className="vt-tip-header">
-                      <span className="vt-tip-icon">✨</span>
-                      <span className="vt-tip-label">{tip.label}</span>
-                    </div>
-                    <div className="vt-tip-text">{tip.text}</div>
+              <div className="space-y-4">
+                {stuckState.tips.map((t, i) => (
+                  <div className="p-4 rounded-xl bg-accent/50 border border-border/40 hover:bg-accent transition-colors" key={i}>
+                    <div className="text-sm font-bold text-violet-500 mb-2">Tip {i + 1} · {t.label}</div>
+                    <div className="text-sm text-foreground/80 leading-relaxed">{t.text}</div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+          <div className="p-6 border-t border-border/40 bg-background/80 backdrop-blur-sm shrink-0">
+            <button 
+              className="w-full py-3 px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" 
+              onClick={closeStuckPanel}
+            >
+              ▶ Resume Conversation
+            </button>
           </div>
         </div>
       )}
