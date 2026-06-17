@@ -17,6 +17,7 @@ from readability.readability import Document
 from config import KNOWLEDGE_DIR
 from database import knowledge, chroma_db
 from services.document_service import document_service
+from services.multimodal_service import multimodal_service
 from agno.knowledge.reader.website_reader import WebsiteReader
 
 logger = logging.getLogger(__name__)
@@ -312,6 +313,18 @@ async def upload_knowledge(
             user_id=user_id,
             chunk_count=0
         )
+
+        # 触发多模态图片提取
+        if file_ext in ['.pdf']:
+            try:
+                multimodal_service.process_document(
+                    file_path=str(file_path),
+                    doc_id=doc_id,
+                    user_id=user_id,
+                    doc_type=file_ext
+                )
+            except Exception as extract_error:
+                logger.error(f"Failed to extract multimodal images: {extract_error}")
 
         return {
             "status": "ok",

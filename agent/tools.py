@@ -208,11 +208,44 @@ def search_knowledge_base(query: str, run_context: RunContext = None) -> str:
                     source = Path(str(raw_source)).name
                 else:
                     source = str(raw_source)
+            else:
+                raw_source = source
+
+            # Extract doc_id from raw_source or metadata
+            uuid_match = re.match(r'^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})_', str(raw_source), re.IGNORECASE)
+            doc_id = uuid_match.group(1) if uuid_match else metadata.get("doc_id", "")
+
+            # Extract page number
+            page_val = metadata.get("page_label") or metadata.get("page") or metadata.get("page_number")
+            page_number = None
+            if page_val is not None:
+                try:
+                    page_number = int(page_val)
+                except ValueError:
+                    pass
+
+            # Find relevant images based on context and page
+            img_append = ""
+            if doc_id:
+                try:
+                    from services.multimodal_service import multimodal_service
+                    context_imgs = multimodal_service.find_contextual_images(doc_id, content, page_number)
+                    if context_imgs:
+                        img_tags = [f"<Desc>{img['doc_id']}/{img['img_number']}.png</Desc>" for img in context_imgs]
+                        img_append = f"\n[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：{', '.join(img_tags)}]"
+                except Exception as img_err:
+                    logger.error(f"Error finding contextual images: {img_err}")
 
             # UUID清理：如果是物理文件，去除 UUID 前缀
             source = uuid_pattern.sub('', str(source))
+            
+            # Format the output block for this chunk
+            chunk_text = f"【结果 {i}】来源: {source}"
+            if page_number is not None:
+                chunk_text += f" (第 {page_number} 页)"
+            chunk_text += f"\n{content[:800]}...{img_append}"
 
-            formatted_results.append(f"【结果 {i}】来源: {source}\n{content[:500]}...")
+            formatted_results.append(chunk_text)
 
         final_result = f"【知识库搜索结果】找到 {len(results)} 条相关内容：\n\n" + "\n\n---\n\n".join(formatted_results)
         

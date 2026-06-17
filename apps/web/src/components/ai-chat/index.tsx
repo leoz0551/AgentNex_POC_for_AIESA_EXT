@@ -9,6 +9,7 @@ import { WelcomeScreen } from './WelcomeScreen';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import { useTheme } from '../theme-provider';
+import { API_BASE } from '../../constants';
 
 // 懒加载面板组件 - 只在需要时才加载
 const RightPanel = lazy(() => import('./RightPanel').then(m => ({ default: m.RightPanel })));
@@ -409,7 +410,15 @@ export function AIChat() {
                        <h3 className="text-xl font-bold text-foreground mb-4">{section.section_title}</h3>
                        <div className="space-y-4">
                          {section.content.map((paragraph: string, pIdx: number) => (
-                           <p key={pIdx} className="text-foreground/80 leading-relaxed">{paragraph}</p>
+                           <div key={pIdx} className="text-foreground/80 leading-relaxed">
+                             {paragraph.split(/(<Desc>.*?<\/Desc>)/g).map((part, idx) => {
+                               if (part.startsWith('<Desc>') && part.endsWith('</Desc>')) {
+                                 const imgPath = part.slice(6, -7);
+                                 return <img key={idx} src={`${API_BASE}/api/imgs/${imgPath}`} alt="Course Illustration" className="my-4 rounded-xl border border-border/50 max-w-full h-auto shadow-lg block" />;
+                               }
+                               return <React.Fragment key={idx}>{part}</React.Fragment>;
+                             })}
+                           </div>
                          ))}
                        </div>
                      </div>

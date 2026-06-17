@@ -19,8 +19,12 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 def generate_stream_content(user_message: str, session_id: str, user_id: str = "default", chat_board_mode: bool = False):
     """生成流式响应内容"""
     try:
-        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=chat_board_mode, session_id=session_id)
-        stream = user_agent.run(user_message, user_id=user_id, session_id=session_id, stream=True)
+        # Multimodal context is now dynamically injected via tools.py (search_knowledge_base)
+        context_message = user_message
+
+        user_agent = create_agent_for_request(context_message, user_id, chat_board_mode=chat_board_mode, session_id=session_id)
+        logger.info(f"[Multimodal Debug] Sending stream request to LLM with modified context.")
+        stream = user_agent.run(context_message, user_id=user_id, session_id=session_id, stream=True)
         
         full_content = ""
         for chunk in stream:
@@ -76,10 +80,16 @@ async def chat(request: ChatRequest):
         user_msg = Message(content=user_message, role="user")
         session_service.add_message(session.id, user_msg)
         
+        # Multimodal context is now dynamically injected via tools.py (search_knowledge_base)
+        context_message = user_message
+        
         # 使用动态创建的 Agent
-        user_agent = create_agent_for_request(user_message, user_id, chat_board_mode=request.chat_board_mode, session_id=session.id)
-        response = user_agent.run(user_message, user_id=user_id, session_id=session.id)
+        logger.info(f"[Multimodal Debug] Sending request to LLM...")
+        user_agent = create_agent_for_request(context_message, user_id, chat_board_mode=request.chat_board_mode, session_id=session.id)
+        response = user_agent.run(context_message, user_id=user_id, session_id=session.id)
         ai_content = response.content if hasattr(response, 'content') else str(response)
+        
+        logger.info(f"[Multimodal Debug] LLM Raw Response: {ai_content}")
         
         ai_msg = Message(content=ai_content, role="assistant")
         session_service.add_message(session.id, ai_msg)

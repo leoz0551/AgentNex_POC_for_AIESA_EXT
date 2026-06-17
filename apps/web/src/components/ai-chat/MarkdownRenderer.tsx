@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { ChartRenderer } from './visuals/ChartRenderer';
+import { API_BASE } from '../../constants';
 
 // 按需引入 highlight.js 语言包（减少约 300KB）
 import hljs from 'highlight.js/lib/core';
@@ -253,7 +254,12 @@ function parseContent(content: string): Array<{ type: 'thinking' | 'markdown'; c
 
 // Markdown 渲染器
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
-  const parts = useMemo(() => parseContent(content), [content]);
+  // 预处理多模态图片标签，转为标准 Markdown 图片语法
+  const processedContent = useMemo(() => {
+    return content.replace(/<Desc>(.*?)<\/Desc>/g, `![Course Illustration](${API_BASE}/api/imgs/$1)`);
+  }, [content]);
+
+  const parts = useMemo(() => parseContent(processedContent), [processedContent]);
 
   return (
     <div className={`markdown-body ${className || ''}`}>

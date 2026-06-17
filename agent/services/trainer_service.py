@@ -33,7 +33,16 @@ def create_trainer_agent(session_id: Optional[str] = None, user_id: str = "defau
     try:
         with open(prompt_file, "r", encoding="utf-8") as f:
             instructions = [f.read()]
-        logger.info("AI Trainer RAG Agent initialized. Loaded unified Markdown system prompt.")
+            
+        # Add Multimodal Instructions to the Trainer
+        multimodal_rules = """
+---
+IMPORTANT MULTIMODAL INSTRUCTION:
+If, and ONLY IF, images are explicitly provided to you in the "[System Inject: Context contains relevant local images: ...]" block, you MUST use the exact format <Desc>{doc_id}/{image_filename}</Desc> (matching what was injected) to reference those images in your response.
+If no images are injected in the context, DO NOT hallucinate image tags or use the <Desc> format. Never invent a doc_id like 'doc123'. ONLY use the exact <Desc>...</Desc> tags provided in the context.
+"""
+        instructions.append(multimodal_rules)
+        logger.info("AI Trainer RAG Agent initialized. Loaded unified Markdown system prompt with Multimodal rules.")
     except Exception as e:
         logger.error(f"Failed to load ai_trainer system prompt: {e}")
         instructions = ["You are the AI Trainer Agent, a professional customer service training assistant."]

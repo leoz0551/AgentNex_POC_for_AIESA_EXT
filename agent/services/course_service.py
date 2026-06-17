@@ -142,6 +142,11 @@ def create_course_agent() -> Agent:
             }
         ]
     }
+    
+    ---
+    IMPORTANT MULTIMODAL INSTRUCTION:
+    If, and ONLY IF, images are explicitly provided to you in the "[System Inject: Context contains relevant local images: ...]" block, you MUST use the exact format <Desc>{doc_id}/{image_filename}</Desc> (matching what was injected) to reference those images in your generated JSON content.
+    If no images are injected in the context, DO NOT hallucinate image tags or use the <Desc> format. Never invent a doc_id like 'doc123'. ONLY use the exact <Desc>...</Desc> tags provided in the context.
     """
 
     return Agent(

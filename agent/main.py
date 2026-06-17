@@ -23,8 +23,9 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from config import API_TITLE, API_VERSION, API_DESCRIPTION, PROMPTS_DIR
+from config import API_TITLE, API_VERSION, API_DESCRIPTION, PROMPTS_DIR, IMAGES_DIR
 from database import knowledge
 from tools import set_knowledge_instance
 from routers import (
@@ -93,6 +94,9 @@ app.include_router(kb_evol_router)
 app.include_router(trainer_router)
 app.include_router(course_router)
 app.include_router(simulation_router)
+
+# ==================== 静态文件路由 ====================
+app.mount("/api/imgs", StaticFiles(directory=str(IMAGES_DIR)), name="images")
 
 # ==================== 根端点 ====================
 

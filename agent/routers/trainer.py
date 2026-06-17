@@ -38,11 +38,16 @@ async def trainer_chat_stream(request: ChatRequest):
     user_msg = Message(content=user_message, role="user")
     session_service.add_message(session.id, user_msg)
 
+    # --- Multimodal Context Injection (Removed) ---
+    # Multimodal context is now dynamically injected via tools.py (search_knowledge_base)
+    # when the LLM retrieves relevant text chunks, utilizing a dual-strategy (Regex + Page).
+    context_message = user_message
+
     # Create Workflow and delegate everything to it
     workflow = TrainerCourseWorkflow(session_id=session.id, user_id=user_id)
 
     return StreamingResponse(
-        workflow.run_stream(user_message),
+        workflow.run_stream(context_message),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

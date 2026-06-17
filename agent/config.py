@@ -70,3 +70,9 @@ KNOWLEDGE_SEARCH_DISTANCE_THRESHOLD = 0.55
 API_TITLE = "AgentNex API"
 API_VERSION = "2.1.0"
 API_DESCRIPTION = "AI Agent API - 支持动态提示词管理、意图分类、会话管理、流式输出、消息反馈、工具调用、记忆、知识库"
+
+# ==================== 多模态配置 ====================
+IMAGES_DIR = DATA_DIR / "imgs"
+IMAGES_DIR.mkdir(exist_ok=True)
+IMAGE_META_FILE = DATA_DIR / "image_store.json"
+SUPPORTED_IMAGE_FORMATS = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']

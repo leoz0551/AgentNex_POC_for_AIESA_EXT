@@ -1,0 +1,30 @@
+# AGNO framework
+agno
+
+# Ollama Python client
+ollama
+
+# Streamlit for UI
+streamlit
+
+# Data processing
+pandas
+numpy
+
+# Image processing
+pillow
+
+# Vector databases - FAISS for vector storage
+faiss-cpu
+
+# Text and multimodal processing
+langchain
+langchain-community
+langchain-core
+pypdf  # For PDF processing
+tiktoken  # For tokenization
+unstructured  # For unstructured data processing
+python-magic  # For file type detection
+
+# Utilities
+python-dotenv

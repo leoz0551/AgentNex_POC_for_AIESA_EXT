@@ -1,0 +1,27 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+agno==1.2.6
+openai
+torch
+torchaudio
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+googlesearch-python
+pycountry
+wikipedia
+arxiv
+pypdf==5.4.0
+misaki[zh]
+num2words
+spacy
+
+phonemizer-fork==3.3.1
+onnxruntime>=1.20.1
+espeakng-loader>=0.2.4
+colorlog>=6.9.0
+soundfile>=0.13.0
+
+# Web service
+fastapi
+uvicorn[standard]
+python-multipart
+faster-whisper
+python-dotenv

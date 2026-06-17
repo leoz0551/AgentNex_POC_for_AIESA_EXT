@@ -128,6 +128,16 @@ def build_dynamic_instructions(user_message: str, force_chatbi: bool = False) ->
         instructions.extend(chatbi_instructions)
         logger.info(f"Added {len(chatbi_instructions)} chatbi-strategy instructions")
     
+    # Add Multimodal Instructions
+    multimodal_instructions = [
+        "---",
+        "IMPORTANT MULTIMODAL INSTRUCTION:",
+        "If the user's question relates to images or if images are mentioned in the [System Inject] context, you MUST use the EXACT format <Desc>{doc_id}/{image_filename}</Desc> to reference images in your response.",
+        "DO NOT use phrases like 'Figure X.png' or 'See Figure X'. ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.",
+        "Example output: '<Desc>doc123/1.png</Desc>'"
+    ]
+    instructions.extend(multimodal_instructions)
+    
     # If no instructions were loaded, fall back to default instructions
     if not instructions:
         logger.warning("No instructions loaded from templates, falling back to default.")
