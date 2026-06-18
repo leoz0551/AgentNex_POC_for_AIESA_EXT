@@ -136,7 +136,7 @@ def create_course_agent() -> Agent:
                 "section_title": "Title of this section",
                 "content": [
                     "A very detailed paragraph explaining this concept comprehensively.",
-                    "Another detailed paragraph covering steps, technical details, or important notes.",
+                    "Another detailed paragraph covering steps. (If you received `<Desc>` tags in the context, insert them naturally into the text like this: <Desc>ACTUAL_DOC_ID/ACTUAL_IMG.png</Desc>)",
                     "More paragraphs as needed to fully cover the retrieved materials for this section."
                 ]
             }
@@ -145,8 +145,10 @@ def create_course_agent() -> Agent:
     
     ---
     IMPORTANT MULTIMODAL INSTRUCTION:
-    If, and ONLY IF, images are explicitly provided to you in the "[System Inject: Context contains relevant local images: ...]" block, you MUST use the exact format <Desc>{doc_id}/{image_filename}</Desc> (matching what was injected) to reference those images in your generated JSON content.
-    If no images are injected in the context, DO NOT hallucinate image tags or use the <Desc> format. Never invent a doc_id like 'doc123'. ONLY use the exact <Desc>...</Desc> tags provided in the context.
+    If you see the tag `[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：<Desc>...</Desc>]` in the retrieved knowledge base chunks, you MUST use the exact <Desc>...</Desc> format to reference those images in your generated JSON content.
+    DO NOT wrap the `<Desc>` tags in Markdown image syntax (e.g., do NOT output `![alt](<Desc>...</Desc>)`). Just output the `<Desc>...</Desc>` tag directly in the text.
+    DO NOT hallucinate image tags. If no `<Desc>` tags are provided in the system context, do NOT output any.
+    ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.
     """
 
     return Agent(

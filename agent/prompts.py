@@ -132,9 +132,10 @@ def build_dynamic_instructions(user_message: str, force_chatbi: bool = False) ->
     multimodal_instructions = [
         "---",
         "IMPORTANT MULTIMODAL INSTRUCTION:",
-        "If the user's question relates to images or if images are mentioned in the [System Inject] context, you MUST use the EXACT format <Desc>{doc_id}/{image_filename}</Desc> to reference images in your response.",
-        "DO NOT use phrases like 'Figure X.png' or 'See Figure X'. ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.",
-        "Example output: '<Desc>doc123/1.png</Desc>'"
+        "If you see the tag `[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：<Desc>...</Desc>]` in the retrieved knowledge base chunks, you MUST use the exact <Desc>...</Desc> format to reference those images in your response.",
+        "DO NOT wrap the `<Desc>` tags in Markdown image syntax (e.g., do NOT output `![alt](<Desc>...</Desc>)`). Just output the `<Desc>...</Desc>` tag directly in the text.",
+        "DO NOT hallucinate image tags. If no `<Desc>` tags are provided in the system context, do NOT output any.",
+        "ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user."
     ]
     instructions.extend(multimodal_instructions)
     

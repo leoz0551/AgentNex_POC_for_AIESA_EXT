@@ -38,8 +38,10 @@ def create_trainer_agent(session_id: Optional[str] = None, user_id: str = "defau
         multimodal_rules = """
 ---
 IMPORTANT MULTIMODAL INSTRUCTION:
-If, and ONLY IF, images are explicitly provided to you in the "[System Inject: Context contains relevant local images: ...]" block, you MUST use the exact format <Desc>{doc_id}/{image_filename}</Desc> (matching what was injected) to reference those images in your response.
-If no images are injected in the context, DO NOT hallucinate image tags or use the <Desc> format. Never invent a doc_id like 'doc123'. ONLY use the exact <Desc>...</Desc> tags provided in the context.
+If you see the tag `[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：<Desc>...</Desc>]` in the retrieved knowledge base chunks, you MUST use the exact <Desc>...</Desc> format to reference those images in your response.
+DO NOT wrap the `<Desc>` tags in Markdown image syntax (e.g., do NOT output `![alt](<Desc>...</Desc>)`). Just output the `<Desc>...</Desc>` tag directly in the text.
+DO NOT hallucinate image tags. If no `<Desc>` tags are provided in the system context, do NOT output any.
+ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.
 """
         instructions.append(multimodal_rules)
         logger.info("AI Trainer RAG Agent initialized. Loaded unified Markdown system prompt with Multimodal rules.")
