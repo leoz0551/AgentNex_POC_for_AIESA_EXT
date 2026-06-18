@@ -254,12 +254,7 @@ function parseContent(content: string): Array<{ type: 'thinking' | 'markdown'; c
 
 // Markdown 渲染器
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
-  // 预处理多模态图片标签，转为标准 Markdown 图片语法
-  const processedContent = useMemo(() => {
-    return content.replace(/<Desc>(.*?)<\/Desc>/g, `![Course Illustration](${API_BASE}/api/imgs/$1)`);
-  }, [content]);
-
-  const parts = useMemo(() => parseContent(processedContent), [processedContent]);
+  const parts = useMemo(() => parseContent(content), [content]);
 
   return (
     <div className={`markdown-body ${className || ''}`}>
@@ -339,26 +334,49 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 <td className="px-4 py-3 text-sm">{children}</td>
               ),
               // 链接
-              a: ({ href, children }) => (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-violet-600 dark:text-violet-400 hover:underline underline-offset-2"
-                >
-                  {children}
-                </a>
-              ),
+              a: ({ href, children }) => {
+                const isImage = href?.match(/\.(png|jpe?g|gif|webp)$/i);
+                if (isImage) {
+                  let finalSrc = href;
+                  if (href && !href.startsWith('http') && !href.startsWith('data:')) {
+                    finalSrc = `${API_BASE}/api/imgs/${href}`;
+                  }
+                  return (
+                    <img
+                      src={finalSrc}
+                      alt={children?.toString() || 'Course Illustration'}
+                      className="my-4 rounded-xl border border-border/50 max-w-full h-auto shadow-lg block"
+                    />
+                  );
+                }
+                
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-600 dark:text-violet-400 hover:underline underline-offset-2"
+                  >
+                    {children}
+                  </a>
+                );
+              },
               // 水平线
               hr: () => <hr className="my-6 border-border/50" />,
               // 图片
-              img: ({ src, alt }) => (
-                <img
-                  src={src}
-                  alt={alt}
-                  className="my-4 rounded-xl border border-border/50 max-w-full h-auto shadow-lg"
-                />
-              ),
+              img: ({ src, alt }) => {
+                let finalSrc = src;
+                if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                  finalSrc = `${API_BASE}/api/imgs/${src}`;
+                }
+                return (
+                  <img
+                    src={finalSrc}
+                    alt={alt}
+                    className="my-4 rounded-xl border border-border/50 max-w-full h-auto shadow-lg block"
+                  />
+                );
+              },
             }}
           >
             {part.content}

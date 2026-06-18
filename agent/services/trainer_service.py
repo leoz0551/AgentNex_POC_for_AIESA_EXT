@@ -38,10 +38,8 @@ def create_trainer_agent(session_id: Optional[str] = None, user_id: str = "defau
         multimodal_rules = """
 ---
 IMPORTANT MULTIMODAL INSTRUCTION:
-If you see the tag `[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：<Desc>...</Desc>]` in the retrieved knowledge base chunks, you MUST use the exact <Desc>...</Desc> format to reference those images in your response.
-DO NOT wrap the `<Desc>` tags in Markdown image syntax (e.g., do NOT output `![alt](<Desc>...</Desc>)`). Just output the `<Desc>...</Desc>` tag directly in the text.
-DO NOT hallucinate image tags. If no `<Desc>` tags are provided in the system context, do NOT output any.
-ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.
+If you see the tag `[系统附加信息：包含参考图片 ![参考图片](...)]` in the retrieved knowledge base chunks, you MUST include those exact Markdown image tags `![参考图片](...)` in your response at the relevant positions to show the images.
+DO NOT hallucinate image tags. Only use the images provided in the system context.
 """
         instructions.append(multimodal_rules)
         logger.info("AI Trainer RAG Agent initialized. Loaded unified Markdown system prompt with Multimodal rules.")

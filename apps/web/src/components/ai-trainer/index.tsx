@@ -126,23 +126,18 @@ export function AITrainer() {
       setIsVoiceLoading(false);
       setIsPlayingVoice(true);
       
-      // 递归提取所有文本内容，当遇到 learning_objectives 键时，动态注入对应的标题使其与 UI 一致
-      const extractText = (obj: any, keyName?: string): string => {
-        if (typeof obj === 'string') return obj;
-        if (Array.isArray(obj)) {
-          const arrText = obj.map(item => extractText(item)).join('\n');
-          return keyName === 'learning_objectives' ? `Learning Objectives\n${arrText}` : arrText;
-        }
-        if (typeof obj === 'object' && obj !== null) {
-          return Object.entries(obj)
-            .filter(([key]) => key !== 'time_estimate') // 略过无需朗读的预估时间
-            .map(([key, val]) => extractText(val, key))
-            .join('\n');
-        }
-        return '';
-      };
+      // Simply clean up Markdown string to read
+      let textToRead = typeof courseData === 'string' ? courseData : '';
+      if (!textToRead) return;
       
-      const textToRead = extractText(courseData);
+      // Strip markdown images
+      textToRead = textToRead.replace(/!\[.*?\]\(.*?\)/g, '');
+      // Strip heading hashes but keep text
+      textToRead = textToRead.replace(/^(#{1,6})\s+/gm, '');
+      // Strip markdown list bullets and asterisks
+      textToRead = textToRead.replace(/^[\*\-]\s+/gm, '');
+      textToRead = textToRead.replace(/\*\*/g, '');
+      
       console.log('Sending text to voice service:', textToRead);
       
       ws.send(JSON.stringify({ text: textToRead }));
@@ -184,10 +179,9 @@ export function AITrainer() {
         const res = await chatApi.getCourseTask(taskId);
         if (res.status === 'completed') {
           try {
-            const parsed = JSON.parse(res.result);
-            setCourseData(parsed);
+            setCourseData(res.result); // Directly set the Markdown string
           } catch (e) {
-            console.error("Failed to parse course result:", e);
+            console.error("Failed to set course result:", e);
           }
           setIsCourseLoading(false);
           return true;
@@ -466,7 +460,10 @@ export function AITrainer() {
                 <GraduationCap className="h-5.5 w-5.5" />
               </div>
               <h2 className="text-base font-bold text-slate-800 tracking-tight">
-                {courseData?.course_title || t('aiTrainer.courseTitle')}
+                {isCourseLoading 
+                  ? t('common.loading') 
+                  : (typeof courseData === 'string' && courseData.match(/^#\s+(.+)$/m)?.[1]) || t('aiTrainer.courseTitle')
+                }
               </h2>
             </div>
             <button 
@@ -488,48 +485,36 @@ export function AITrainer() {
                <div className="flex flex-col md:flex-row gap-8">
                  {/* Main Content (Left) */}
                  <div className="flex-1 prose prose-slate max-w-none text-slate-700">
-                   {courseData.learning_objectives && courseData.learning_objectives.length > 0 && (
-                     <div className="mb-8">
-                       <h3 className="text-xl font-bold text-slate-800 mb-4">Learning Objectives</h3>
-                       <ul className="list-disc pl-5 space-y-2">
-                         {courseData.learning_objectives.map((obj: string, idx: number) => (
-                           <li key={idx} className="text-slate-700">{obj}</li>
-                         ))}
-                       </ul>
-                     </div>
-                   )}
-                   {courseData.sections && courseData.sections.map((section: any, idx: number) => (
-                     <div key={idx} className="mb-8" id={`section-${idx}`}>
-                       <h3 className="text-xl font-bold text-slate-800 mb-4">{section.section_title}</h3>
-                       <div className="space-y-4">
-                         {section.content.map((paragraph: string, pIdx: number) => (
-                           <p key={pIdx} className="text-slate-700 leading-relaxed">{paragraph}</p>
-                         ))}
-                       </div>
-                     </div>
-                   ))}
+                   <MarkdownRenderer content={typeof courseData === 'string' ? courseData : ''} />
                  </div>
                  {/* Table of Contents (Right) */}
                  <div className="w-48 shrink-0 hidden md:block border-l border-slate-200 pl-6 space-y-6 self-start sticky top-0">
-                   {courseData.time_estimate && (
-                     <div>
-                       <h4 className="text-sm font-bold text-slate-800 mb-2">Time Estimate</h4>
-                       <p className="text-xs text-slate-500 flex items-center gap-1">
-                         <span className="w-3 h-3 rounded-full border border-slate-400 block shrink-0" />
-                         {courseData.time_estimate}
-                       </p>
-                     </div>
-                   )}
                    <div>
                      <h4 className="text-sm font-bold text-slate-800 mb-2">Topics</h4>
                      <div className="w-1 h-4 bg-blue-500 absolute -ml-6 mt-1 rounded-r-md"></div>
                      <ul className="space-y-3">
-                       <li className="text-xs text-blue-600 font-medium cursor-pointer">Learning Objectives</li>
-                       {courseData.sections && courseData.sections.map((section: any, idx: number) => (
-                         <li key={idx} className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer transition-colors">
-                           {section.section_title}
-                         </li>
-                       ))}
+                       {typeof courseData === 'string' && Array.from(courseData.matchAll(/^#{2,3}\s+(.+)$/gm)).map((match, idx) => {
+                         const title = match[1].replace(/\*/g, '').trim();
+                         // Find the corresponding heading element in the DOM by its text content and scroll to it
+                         const handleScroll = () => {
+                           const elements = document.querySelectorAll('h2, h3');
+                           for (let i = 0; i < elements.length; i++) {
+                             if (elements[i].textContent === title) {
+                               elements[i].scrollIntoView({ behavior: 'smooth' });
+                               break;
+                             }
+                           }
+                         };
+                         return (
+                           <li 
+                             key={idx} 
+                             onClick={handleScroll}
+                             className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer transition-colors"
+                           >
+                             {title}
+                           </li>
+                         );
+                       })}
                      </ul>
                    </div>
                  </div>

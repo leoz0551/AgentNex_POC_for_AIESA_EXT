@@ -10,6 +10,7 @@ import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import { useTheme } from '../theme-provider';
 import { API_BASE } from '../../constants';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 // 懒加载面板组件 - 只在需要时才加载
 const RightPanel = lazy(() => import('./RightPanel').then(m => ({ default: m.RightPanel })));
@@ -373,7 +374,10 @@ export function AIChat() {
                 <GraduationCap className="h-5 w-5" />
               </div>
               <h2 className="text-base font-bold text-foreground tracking-tight">
-                {courseData?.course_title || t('aiTrainer.courseTitle')}
+                {isCourseLoading 
+                  ? t('common.loading') 
+                  : (typeof courseData === 'string' && courseData.match(/^#\s+(.+)$/m)?.[1]) || t('aiTrainer.courseTitle')
+                }
               </h2>
             </div>
             <button 
@@ -395,34 +399,7 @@ export function AIChat() {
                <div className="flex flex-col md:flex-row gap-8">
                  {/* Main Content (Left) */}
                  <div className="flex-1 prose prose-slate dark:prose-invert max-w-none text-foreground">
-                   {courseData.learning_objectives && courseData.learning_objectives.length > 0 && (
-                     <div className="mb-8" id="section-objectives">
-                       <h3 className="text-xl font-bold text-foreground mb-4">Learning Objectives</h3>
-                       <ul className="list-disc pl-5 space-y-2">
-                         {courseData.learning_objectives.map((obj: string, idx: number) => (
-                           <li key={idx} className="text-foreground/80">{obj}</li>
-                         ))}
-                       </ul>
-                     </div>
-                   )}
-                   {courseData.sections && courseData.sections.map((section: any, idx: number) => (
-                     <div key={idx} className="mb-8" id={`section-${idx}`}>
-                       <h3 className="text-xl font-bold text-foreground mb-4">{section.section_title}</h3>
-                       <div className="space-y-4">
-                         {section.content.map((paragraph: string, pIdx: number) => (
-                           <div key={pIdx} className="text-foreground/80 leading-relaxed">
-                             {paragraph.split(/(<Desc>.*?<\/Desc>)/g).map((part, idx) => {
-                               if (part.startsWith('<Desc>') && part.endsWith('</Desc>')) {
-                                 const imgPath = part.slice(6, -7);
-                                 return <img key={idx} src={`${API_BASE}/api/imgs/${imgPath}`} alt="Course Illustration" className="my-4 rounded-xl border border-border/50 max-w-full h-auto shadow-lg block" />;
-                               }
-                               return <React.Fragment key={idx}>{part}</React.Fragment>;
-                             })}
-                           </div>
-                         ))}
-                       </div>
-                     </div>
-                   ))}
+                   <MarkdownRenderer content={typeof courseData === 'string' ? courseData : ''} />
                  </div>
                  {/* Table of Contents (Right) */}
                  <div className="w-48 shrink-0 hidden md:block border-l border-border/40 pl-6 space-y-6 self-start sticky top-0">
@@ -430,27 +407,28 @@ export function AIChat() {
                      <h4 className="text-sm font-bold text-foreground mb-2">Topics</h4>
                      <div className="w-1 h-4 bg-violet-500 absolute -ml-6 mt-1 rounded-r-md"></div>
                      <ul className="space-y-3">
-                       <li 
-                         className="text-xs text-violet-500 font-medium cursor-pointer"
-                         onClick={() => {
-                           const el = document.getElementById('section-objectives');
-                           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                         }}
-                       >
-                         Learning Objectives
-                       </li>
-                       {courseData.sections && courseData.sections.map((section: any, idx: number) => (
-                         <li 
-                           key={idx} 
-                           className="text-xs text-muted-foreground hover:text-violet-500 cursor-pointer transition-colors"
-                           onClick={() => {
-                             const el = document.getElementById(`section-${idx}`);
-                             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                           }}
-                         >
-                           {section.section_title}
-                         </li>
-                       ))}
+                       {typeof courseData === 'string' && Array.from(courseData.matchAll(/^#{2,3}\s+(.+)$/gm)).map((match, idx) => {
+                         const title = match[1].replace(/\*/g, '').trim();
+                         // Find the corresponding heading element in the DOM by its text content and scroll to it
+                         const handleScroll = () => {
+                           const elements = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+                           for (let i = 0; i < elements.length; i++) {
+                             if (elements[i].textContent === title) {
+                               elements[i].scrollIntoView({ behavior: 'smooth' });
+                               break;
+                             }
+                           }
+                         };
+                         return (
+                           <li 
+                             key={idx} 
+                             onClick={handleScroll}
+                             className="text-xs text-muted-foreground hover:text-violet-500 cursor-pointer transition-colors"
+                           >
+                             {title}
+                           </li>
+                         );
+                       })}
                      </ul>
                    </div>
                  </div>

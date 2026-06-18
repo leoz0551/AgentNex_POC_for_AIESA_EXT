@@ -112,43 +112,35 @@ def create_course_agent() -> Agent:
     """Create a Course Agent for generating micro-courses based on RAG context."""
     course_instructions = """
     You are a professional micro-course content designer.
-    Your task is to generate highly detailed and comprehensive structured JSON data for a micro-course based on the user's latest question and ALL the RAG-retrieved reference materials.
+    Your task is to generate a highly detailed and comprehensive micro-course document in pure Markdown format based on the user's latest question and ALL the RAG-retrieved reference materials.
     
     Crucial Instructions:
     1. Do NOT just provide a brief summary. The course MUST be significantly more detailed than a standard chatbot reply.
     2. First, internally analyze ALL the retrieved content and organize a detailed outline that covers every piece of relevant information.
     3. Then, expand this outline into a full, in-depth micro-course, ensuring you extract and explain the technical details, nuances, and step-by-step procedures thoroughly.
-    4. Break the content down into logically clear and highly detailed sections.
-    5. The output MUST be in the following JSON format strictly. The format should be suitable for rendering as an HTML article with a table of contents on the right side and main content on the left.
-    6. Do NOT include any extra text outside of the JSON (e.g., no markdown code blocks, output the raw JSON string directly).
-    7. Language Adaptation: The generated micro-course MUST be in the EXACT same language as the user's question. If the user asks in English, the entire course content (including title, objectives, and section titles) must be in English. If the user asks in Chinese, it must be in Chinese.
+    4. Break the content down into logically clear and highly detailed sections using Markdown Headings (e.g., `## Section Title`).
+    5. The output MUST be a pure, readable Markdown document. Do NOT output JSON.
+    6. Language Adaptation: The generated micro-course MUST strictly be in the EXACT same language as the user's question. If the user asks in English, the entire course content, including all headings, must be in English. If the user asks in Chinese, it must be in Chinese.
     
-    JSON Format:
-    {
-        "course_title": "The Main Title of the Course",
-        "time_estimate": "Estimated time (e.g., About 20 mins)",
-        "learning_objectives": [
-            "Objective 1",
-            "Objective 2"
-        ],
-        "sections": [
-            {
-                "section_title": "Title of this section",
-                "content": [
-                    "A very detailed paragraph explaining this concept comprehensively.",
-                    "Another detailed paragraph covering steps. (If you received `<Desc>` tags in the context, insert them naturally into the text like this: <Desc>ACTUAL_DOC_ID/ACTUAL_IMG.png</Desc>)",
-                    "More paragraphs as needed to fully cover the retrieved materials for this section."
-                ]
-            }
-        ]
-    }
+    Markdown Format Structure Example:
+    # Main Title of the Course
+    
+    ## Learning Objectives
+    - Objective 1
+    - Objective 2
+    
+    ## Section Title
+    A very detailed paragraph explaining this concept comprehensively. Use **bold** text to emphasize key points.
+    
+    Another detailed paragraph covering steps. Insert relevant images inline where they belong.
+    
+    ## Another Section
+    More paragraphs as needed to fully cover the retrieved materials for this section.
     
     ---
     IMPORTANT MULTIMODAL INSTRUCTION:
-    If you see the tag `[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：<Desc>...</Desc>]` in the retrieved knowledge base chunks, you MUST use the exact <Desc>...</Desc> format to reference those images in your generated JSON content.
-    DO NOT wrap the `<Desc>` tags in Markdown image syntax (e.g., do NOT output `![alt](<Desc>...</Desc>)`). Just output the `<Desc>...</Desc>` tag directly in the text.
-    DO NOT hallucinate image tags. If no `<Desc>` tags are provided in the system context, do NOT output any.
-    ONLY use the exact <Desc>...</Desc> tags provided in the context to show images to the user.
+    If you see the tag `[系统附加信息：包含参考图片 ![参考图片](...)]` in the retrieved knowledge base chunks, you MUST include those exact Markdown image tags `![参考图片](...)` in your generated Markdown course at the relevant positions to illustrate the steps.
+    DO NOT hallucinate image tags. Only use the exact images provided in the system context.
     """
 
     return Agent(

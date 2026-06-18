@@ -87,22 +87,18 @@ export function useCourse() {
       setIsVoiceLoading(false);
       setIsPlayingVoice(true);
       
-      const extractText = (obj: any, keyName?: string): string => {
-        if (typeof obj === 'string') return obj;
-        if (Array.isArray(obj)) {
-          const arrText = obj.map(item => extractText(item)).join('\n');
-          return keyName === 'learning_objectives' ? `Learning Objectives\n${arrText}` : arrText;
-        }
-        if (typeof obj === 'object' && obj !== null) {
-          return Object.entries(obj)
-            .filter(([key]) => key !== 'time_estimate') // 略过无需朗读的预估时间
-            .map(([key, val]) => extractText(val, key))
-            .join('\n');
-        }
-        return '';
-      };
+      // Simply clean up Markdown string to read
+      let textToRead = typeof courseData === 'string' ? courseData : '';
+      if (!textToRead) return;
       
-      const textToRead = extractText(courseData);
+      // Strip markdown images
+      textToRead = textToRead.replace(/!\[.*?\]\(.*?\)/g, '');
+      // Strip heading hashes but keep text
+      textToRead = textToRead.replace(/^(#{1,6})\s+/gm, '');
+      // Strip markdown list bullets and asterisks
+      textToRead = textToRead.replace(/^[\*\-]\s+/gm, '');
+      textToRead = textToRead.replace(/\*\*/g, '');
+      
       console.log('Sending text to voice service:', textToRead);
       
       ws.send(JSON.stringify({ text: textToRead }));
@@ -144,10 +140,9 @@ export function useCourse() {
         const res = await chatApi.getCourseTask(taskId);
         if (res.status === 'completed') {
           try {
-            const parsed = JSON.parse(res.result);
-            setCourseData(parsed);
+            setCourseData(res.result); // Directly set the Markdown string
           } catch (e) {
-            console.error("Failed to parse course result:", e);
+            console.error("Failed to set course result:", e);
           }
           setIsCourseLoading(false);
           return true;

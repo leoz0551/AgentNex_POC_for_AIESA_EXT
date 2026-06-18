@@ -231,8 +231,8 @@ def search_knowledge_base(query: str, run_context: RunContext = None) -> str:
                     from services.multimodal_service import multimodal_service
                     context_imgs = multimodal_service.find_contextual_images(doc_id, content, page_number)
                     if context_imgs:
-                        img_tags = [f"<Desc>{img['doc_id']}/{img['img_number']}.png</Desc>" for img in context_imgs]
-                        img_append = f"\n[系统附加信息：该内容段落关联以下参考图片标签，回答时请依据上下文直接使用：{', '.join(img_tags)}]"
+                        img_tags = [f"![参考图片]({img['doc_id']}/{img['img_number']}.png)" for img in context_imgs]
+                        img_append = f"\n[系统附加信息：该内容段落包含以下参考图片，请直接在回答中使用它们：{' '.join(img_tags)}]"
                 except Exception as img_err:
                     logger.error(f"Error finding contextual images: {img_err}")
 
