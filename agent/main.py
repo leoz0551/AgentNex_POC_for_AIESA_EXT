@@ -89,14 +89,23 @@ app.include_router(sessions_router)
 app.include_router(memory_router)
 app.include_router(knowledge_router)
 app.include_router(tools_router)
-app.include_router(data_router, prefix="/api/data", tags=["Data"])
+app.include_router(data_router, prefix="/data", tags=["Data"])
 app.include_router(kb_evol_router)
 app.include_router(trainer_router)
 app.include_router(course_router)
 app.include_router(simulation_router)
 
-# ==================== 静态文件路由 ====================
-app.mount("/api/imgs", StaticFiles(directory=str(IMAGES_DIR)), name="images")
+# ==================== 静态图片路由 ====================
+from fastapi.responses import FileResponse
+from pathlib import Path
+
+@app.get("/imgs/{doc_id}/{img_name}")
+async def get_image(doc_id: str, img_name: str):
+    file_path = IMAGES_DIR / doc_id / img_name
+    if file_path.exists():
+        return FileResponse(file_path)
+    from fastapi import HTTPException
+    raise HTTPException(status_code=404, detail=f"Image not found on disk: {file_path}")
 
 # ==================== 根端点 ====================
 

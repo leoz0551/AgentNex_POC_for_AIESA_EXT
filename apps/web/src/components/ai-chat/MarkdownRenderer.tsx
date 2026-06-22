@@ -339,7 +339,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 if (isImage) {
                   let finalSrc = href;
                   if (href && !href.startsWith('http') && !href.startsWith('data:')) {
-                    finalSrc = `${API_BASE}/api/imgs/${href}`;
+                    finalSrc = `${API_BASE}/imgs/${href}`;
                   }
                   return (
                     <img
@@ -367,7 +367,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
               img: ({ src, alt }) => {
                 let finalSrc = src;
                 if (src && !src.startsWith('http') && !src.startsWith('data:')) {
-                  finalSrc = `${API_BASE}/api/imgs/${src}`;
+                  finalSrc = `${API_BASE}/imgs/${src}`;
                 }
                 return (
                   <img

@@ -9,7 +9,7 @@ import { WelcomeScreen } from './WelcomeScreen';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import { useTheme } from '../theme-provider';
-import { API_BASE } from '../../constants';
+
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 // 懒加载面板组件 - 只在需要时才加载

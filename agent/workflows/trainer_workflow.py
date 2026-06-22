@@ -83,16 +83,19 @@ class TrainerCourseWorkflow:
                     name=f"course-gen-{task_id[:8]}"
                 ).start()
 
-                # Simple heuristic: if user message has Chinese characters, default to Chinese, else English
                 import re
                 has_chinese = bool(re.search(r'[\u4e00-\u9fff]', user_message))
+                
+                # Programmatically inject the course link and placeholder to guarantee 100% reliability
                 if has_chinese:
+                    course_link = "\n\n详细内容，可以参考微课程：[微课程学习](course://empathy_management)"
                     placeholder = "\n\n*[详细微课程内容正在生成中...]*"
                 else:
+                    course_link = "\n\nFor detailed content, please refer to micro-course: [Micro-course Learning](course://empathy_management)"
                     placeholder = "\n\n*[Detailed micro-course content is generating...]*"
                 
-                full_content += placeholder
-                yield f"data: {json.dumps({'content': placeholder, 'done': False})}\n\n"
+                full_content += course_link + placeholder
+                yield f"data: {json.dumps({'content': course_link + placeholder, 'done': False})}\n\n"
 
                 # Save AI reply to session
                 ai_msg = Message(content=full_content, role="assistant", course_task_id=task_id)

@@ -99,6 +99,23 @@ def delete_course_task(task_id: str):
         del _course_tasks[task_id]
         _save_tasks()
 
+def get_all_saved_courses() -> List[Dict]:
+    """Return all saved courses, sorted by latest first."""
+    saved = []
+    for tid, task in _course_tasks.items():
+        if task.get("is_saved") and task.get("status") == "completed":
+            saved.append(task)
+            
+    def get_sort_key(task):
+        val = task.get("updated_at")
+        if isinstance(val, datetime):
+            return val.isoformat()
+        if isinstance(val, str):
+            return val
+        return ""
+
+    return sorted(saved, key=get_sort_key, reverse=True)
+
 def save_course_task(task_id: str):
     """Mark a course generation task as saved."""
     if task_id in _course_tasks:

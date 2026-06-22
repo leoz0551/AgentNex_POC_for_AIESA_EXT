@@ -3,6 +3,7 @@ import { Send, Globe, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@workspace/ui/components/button';
 import { languages } from '../../i18n';
+import { API_BASE } from '../../constants';
 import type { StyleConfig } from '../../hooks/useStyleConfig';
 
 interface InputAreaProps {
@@ -131,7 +132,7 @@ export function InputArea({
             formData.append('file', file);
             alert('正在清空旧数据并重新导入，请稍候...');
             try {
-              const url = (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/data/upload' : '/api/data/upload') + '?clear=true';
+              const url = `${API_BASE}/data/upload?clear=true`;
               const res = await fetch(url, { method: 'POST', body: formData });
               const data = await res.json();
               if (res.ok) alert('数据重置并上传成功: ' + (data.message || ''));
