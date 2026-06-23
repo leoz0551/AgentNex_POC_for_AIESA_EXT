@@ -35,18 +35,24 @@ export function PromptsPanel({ onPromptSelect, onCourseSelect }: PromptsPanelPro
         for (const t of tasks) {
           if (t.status === 'completed' && t.result) {
             try {
-              const resObj = typeof t.result === 'string' ? JSON.parse(t.result) : t.result;
-              if (resObj.course_title) {
-                validCourses.push({
-                  id: t.id,
-                  title: resObj.course_title,
-                  description: Array.isArray(resObj.learning_objectives) 
-                    ? resObj.learning_objectives.join('; ') 
-                    : resObj.learning_objectives || ''
-                });
-              }
+              // Since the course is now generated as pure Markdown instead of JSON
+              const resultStr = typeof t.result === 'string' ? t.result : JSON.stringify(t.result);
+              
+              // Extract title from first # Heading
+              const titleMatch = resultStr.match(/^#\s+(.+)$/m);
+              const title = titleMatch ? titleMatch[1].trim() : 'Untitled Course';
+              
+              // Extract a brief description (first non-empty paragraph after title)
+              const paragraphs = resultStr.split('\n\n').filter((p: string) => p.trim() && !p.startsWith('#'));
+              const description = paragraphs.length > 0 ? paragraphs[0].substring(0, 100) + '...' : '';
+
+              validCourses.push({
+                id: t.id,
+                title: title,
+                description: description
+              });
             } catch (e) {
-              // ignore parse error
+              console.error("Failed to parse course result", e);
             }
           }
         }
