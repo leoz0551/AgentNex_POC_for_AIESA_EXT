@@ -9,7 +9,7 @@ The async orchestration is handled by the Workflow layer.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 
