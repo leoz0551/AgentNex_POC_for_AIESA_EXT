@@ -42,14 +42,17 @@ class A2ARequest(BaseModel):
     params: A2AMessageParams
     id: Optional[str] = None
 
-# --- A2A Response Models ---
+class A2AResponseMessage(BaseModel):
+    contextId: str
+    kind: str = "message"
+    messageId: str
+    content: str
+    metadata: Optional[dict] = None
 
 class A2AResponseResult(BaseModel):
-    type: str = Field(..., description="Event type, e.g., 'MessageChunkEvent' or 'MessageCompleteEvent'")
-    content: Optional[str] = None
-    status: Optional[str] = None
+    message: A2AResponseMessage
 
 class A2AResponse(BaseModel):
     jsonrpc: str = "2.0"
-    id: str = "1" # Should match the original request id if provided
+    id: str
     result: A2AResponseResult

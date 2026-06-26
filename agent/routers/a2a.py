@@ -32,7 +32,7 @@ async def get_agent_card():
         "name": "AI Trainer Agent",
         "description": "An AI Trainer agent capable of guiding users through courses and providing training assistance.",
         "url": "https://agentnex.cc/a2a/trainer/v1/message:stream",
-        "version": "1.0",
+        "version": "0.3.0",
         "capabilities": {
             "streaming": True,
             "pushNotifications": False,
@@ -103,165 +103,45 @@ async def a2a_trainer_stream(version: str, request: A2ARequest, api_key: str = D
 
     workflow = TrainerCourseWorkflow(session_id=session.id, user_id=user_id)
     original_req_id = request.id or "1"
+    import uuid
+    import time as _time
+    import json
+    start_time = _time.monotonic()
+    
+    full_content = ""
+    # Collect stream outputs into a single string synchronously
+    try:
+        for chunk in workflow.run_stream(user_message_text):
+            raw_chunk = chunk
+            if chunk.startswith("data: "):
+                raw_chunk = chunk[6:]
+            raw_chunk = raw_chunk.strip()
+            if not raw_chunk:
+                continue
+            try:
+                data_dict = json.loads(raw_chunk)
+                full_content += data_dict.get("content", "")
+            except json.JSONDecodeError:
+                full_content += raw_chunk
+    except Exception as e:
+        logger.error(f"[A2A] Workflow error: {e}")
+        full_content = f"Sorry, an error occurred during processing: {e}"
 
-    async def a2a_stream_generator():
-        import asyncio
-        import threading
-        import time as _time
+    elapsed = _time.monotonic() - start_time
+    logger.info(f"[A2A] Response generated | session: {session_id[:8]} | elapsed: {elapsed:.1f}s")
 
-        stream_start = _time.monotonic()
-        chunk_count = 0
-        heartbeat_count = 0
-
-        try:
-            # ── 1. 立即发送 ack，建立连接并重置客户端超时计时器 ──────────────
-            ack_event = A2AResponse(
-                jsonrpc="2.0",
-                id=original_req_id,
-                result=A2AResponseResult(
-                    type="MessageChunkEvent",
-                    content=""
-                )
+    from models_a2a import A2AResponse, A2AResponseResult, A2AResponseMessage
+    
+    response = A2AResponse(
+        jsonrpc="2.0",
+        id=original_req_id,
+        result=A2AResponseResult(
+            message=A2AResponseMessage(
+                contextId=session.id,
+                messageId=str(uuid.uuid4()),
+                content=full_content
             )
-            yield f"data: {ack_event.model_dump_json(exclude_none=True)}\n\n"
-            logger.info(f"[A2A] Ack sent | session: {session_id[:8]}")
-
-            # ── 1b. 立即发送一条含文字的"思考中"提示 ─────────────────────────
-            # Copilot Studio 的超时窗口很短，空 content 的 ack 不会重置其计时器。
-            # 必须立刻发一条有实际文字内容的事件，让 Copilot Studio 认为流已激活。
-            
-            # 简单检测语言：如果包含中文字符，则用中文回复，否则用英文
-            import re
-            is_chinese = bool(re.search(r'[\u4e00-\u9fff]', user_message_text))
-            thinking_text = "正在为您查找相关资料，请稍候…" if is_chinese else "Looking up relevant information, please wait..."
-            
-            thinking_event = A2AResponse(
-                jsonrpc="2.0",
-                id=original_req_id,
-                result=A2AResponseResult(
-                    type="MessageChunkEvent",
-                    content=thinking_text
-                )
-            )
-            yield f"data: {thinking_event.model_dump_json(exclude_none=True)}\n\n"
-            logger.info(f"[A2A] Thinking prompt sent ({'ZH' if is_chinese else 'EN'}) | session: {session_id[:8]}")
-
-
-            # ── 2. 启动生产者线程（同步模型推理 → 异步队列）─────────────────
-            queue = asyncio.Queue()
-            loop = asyncio.get_running_loop()
-
-            def producer():
-                try:
-                    for chunk in workflow.run_stream(user_message_text):
-                        raw_chunk = chunk
-                        if chunk.startswith("data: "):
-                            raw_chunk = chunk[6:]
-                        raw_chunk = raw_chunk.strip()
-                        if not raw_chunk:
-                            continue
-                        loop.call_soon_threadsafe(queue.put_nowait, raw_chunk)
-                    loop.call_soon_threadsafe(queue.put_nowait, None)  # EOF
-                except Exception as e:
-                    loop.call_soon_threadsafe(queue.put_nowait, e)
-
-            threading.Thread(
-                target=producer, daemon=True, name=f"a2a-stream-{session_id[:8]}"
-            ).start()
-
-            # ── 3. 消费队列，转发 SSE chunk；超时则发心跳 ───────────────────
-            while True:
-                try:
-                    raw_chunk = await asyncio.wait_for(queue.get(), timeout=5.0)
-
-                    if raw_chunk is None:
-                        break  # EOF
-
-                    if isinstance(raw_chunk, Exception):
-                        raise raw_chunk
-
-                    try:
-                        data_dict = json.loads(raw_chunk)
-                        content_str = data_dict.get("content", "")
-                    except json.JSONDecodeError:
-                        content_str = raw_chunk
-
-                    response_obj = A2AResponse(
-                        jsonrpc="2.0",
-                        id=original_req_id,
-                        result=A2AResponseResult(
-                            type="MessageChunkEvent",
-                            content=content_str
-                        )
-                    )
-                    yield f"data: {response_obj.model_dump_json(exclude_none=True)}\n\n"
-                    chunk_count += 1
-                    if chunk_count == 1:
-                        logger.info(f"[A2A] First chunk sent | session: {session_id[:8]}")
-
-                except asyncio.TimeoutError:
-                    # 模型超过 5 秒无输出，发心跳防止连接被远端关闭
-                    heartbeat_event = A2AResponse(
-                        jsonrpc="2.0",
-                        id=original_req_id,
-                        result=A2AResponseResult(
-                            type="MessageChunkEvent",
-                            content=""
-                        )
-                    )
-                    yield f"data: {heartbeat_event.model_dump_json(exclude_none=True)}\n\n"
-                    heartbeat_count += 1
-                    logger.debug(f"[A2A] Heartbeat #{heartbeat_count} | session: {session_id[:8]}")
-
-            # ── 4. 发送完成事件 ──────────────────────────────────────────────
-            complete_event = A2AResponse(
-                jsonrpc="2.0",
-                id=original_req_id,
-                result=A2AResponseResult(
-                    type="MessageCompleteEvent",
-                    content=""
-                )
-            )
-            yield f"data: {complete_event.model_dump_json(exclude_none=True)}\n\n"
-            elapsed = _time.monotonic() - stream_start
-            logger.info(
-                f"[A2A] Stream completed | session: {session_id[:8]} | "
-                f"chunks: {chunk_count} | heartbeats: {heartbeat_count} | elapsed: {elapsed:.1f}s"
-            )
-
-        except GeneratorExit:
-            elapsed = _time.monotonic() - stream_start
-            logger.warning(
-                f"[A2A] Stream interrupted by client | session: {session_id[:8]} | "
-                f"chunks: {chunk_count} | heartbeats: {heartbeat_count} | elapsed: {elapsed:.1f}s"
-            )
-            raise
-
-        except Exception as e:
-            elapsed = _time.monotonic() - stream_start
-            logger.error(
-                f"[A2A] Stream error | session: {session_id[:8]} | "
-                f"chunks: {chunk_count} | heartbeats: {heartbeat_count} | elapsed: {elapsed:.1f}s | "
-                f"error: {e}"
-            )
-            error_event = A2AResponse(
-                jsonrpc="2.0",
-                id=original_req_id,
-                result=A2AResponseResult(
-                    type="MessageCompleteEvent",
-                    status="failed",
-                    content=str(e)
-                )
-            )
-            yield f"data: {error_event.model_dump_json(exclude_none=True)}\n\n"
-
-
-    return StreamingResponse(
-        a2a_stream_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Session-Id": session.id
-        }
+        )
     )
+
+    return response
