@@ -33,6 +33,7 @@ async def get_agent_card():
         "description": "An AI Trainer agent capable of guiding users through courses and providing training assistance.",
         "url": "https://agentnex.cc/a2a/trainer/v1/message:stream",
         "version": "0.3.0",
+        "protocolVersion": "0.3.0",
         "capabilities": {
             "streaming": True,
             "pushNotifications": False,
@@ -52,24 +53,33 @@ async def get_agent_card():
 @router.post("/trainer/{version}/message:stream")
 async def a2a_trainer_stream(version: str, request: A2ARequest, api_key: str = Depends(verify_api_key)):
     """Handle A2A chat requests over HTTP with streaming response (JSON-RPC over SSE)."""
-    
-    if request.method != "message/send":
-        raise HTTPException(status_code=400, detail="Unsupported method. Expected 'message/send'")
+    if request.method not in ["message/send", "tasks/send"]:
+        raise HTTPException(status_code=400, detail=f"Unsupported method: {request.method}. Expected 'message/send' or 'tasks/send'")
 
-    message_params = request.params.message
-    session_id = message_params.contextId
-    
-    # Extract the user's latest query
-    user_message_text = ""
-    
-    # 优先从 parts 提取 (这是 Copilot Studio 分发给子 Agent 的真实指令)
-    if message_params.parts:
-        for part in message_params.parts:
-            if part.kind == "text":
-                user_message_text = part.text
+    if request.method == "tasks/send":
+        logger.info("[A2A] Copilot Studio used v0.3 protocol (tasks/send) ✓")
+        # v0.3.x logic
+        message_dict = request.params.model_dump().get("message", {})
+        session_id = message_dict.get("contextId", "") or request.id or "session"
+        parts = message_dict.get("parts", [])
+        user_message_text = ""
+        for part in parts:
+            if part.get("type") == "text":
+                user_message_text = part.get("text", "")
                 break
-                
-    if not user_message_text and message_params.metadata and message_params.metadata.chathistory:
+        message_params = request.params.message
+    else:
+        logger.info("[A2A] Copilot Studio used v1.0 protocol (message/send) ✓")
+        # v1.0 logic
+        message_params = request.params.message
+        session_id = message_params.contextId
+        user_message_text = ""
+        if message_params.parts:
+            for part in message_params.parts:
+                if part.kind == "text":
+                    user_message_text = part.text
+                    break
+
         # Fallback: parse chathistory which might be wrapped in {"HasValue": true, "Value": [...]}
         history_list = message_params.metadata.chathistory
         if isinstance(history_list, list) and len(history_list) > 0:
@@ -132,16 +142,36 @@ async def a2a_trainer_stream(version: str, request: A2ARequest, api_key: str = D
 
     from models_a2a import A2AResponse, A2AResponseResult, A2AResponseMessage
     
-    response = A2AResponse(
-        jsonrpc="2.0",
-        id=original_req_id,
-        result=A2AResponseResult(
-            message=A2AResponseMessage(
-                contextId=session.id,
-                messageId=str(uuid.uuid4()),
-                content=full_content
+    if request.method == "tasks/send":
+        # v0.3 Response format
+        return {
+            "jsonrpc": "2.0",
+            "id": original_req_id,
+            "result": {
+                "id": "task-" + str(uuid.uuid4()),
+                "status": {
+                    "state": "completed"
+                },
+                "artifacts": [
+                    {
+                        "parts": [
+                            {"type": "text", "text": full_content}
+                        ]
+                    }
+                ]
+            }
+        }
+    else:
+        # v1.0 Response format
+        response = A2AResponse(
+            jsonrpc="2.0",
+            id=original_req_id,
+            result=A2AResponseResult(
+                message=A2AResponseMessage(
+                    contextId=session.id,
+                    messageId=str(uuid.uuid4()),
+                    content=full_content
+                )
             )
         )
-    )
-
-    return response
+        return response
