@@ -146,6 +146,11 @@ async def a2a_trainer_stream(request: A2ARequest, api_key: str = Depends(verify_
     elapsed = _time.monotonic() - start_time
     logger.info(f"[A2A] Response generated | session: {session_id[:8]} | elapsed: {elapsed:.1f}s")
 
+    # Filter out Markdown image links specifically for A2A output
+    import re
+    full_content = re.sub(r'!\[[^\]]*\]\([^\)]*\)', '', full_content)
+    full_content = re.sub(r'\n\s*\n\s*\n', '\n\n', full_content).strip()
+
     if request.method == "tasks/send":
         # v0.3 Response format
         return {
