@@ -35,7 +35,7 @@ async def get_agent_card():
         "version": "0.3.0",
         "protocolVersion": "0.3.0",
         "capabilities": {
-            "streaming": True,
+            "streaming": False,
             "pushNotifications": False,
             "stateless": True,
             "multiTurn": True
@@ -54,7 +54,7 @@ async def get_agent_card():
 @router.post("/trainer")
 async def a2a_trainer_stream(request: A2ARequest, api_key: str = Depends(verify_api_key)):
     """Handle A2A chat requests over HTTP with synchronous JSON-RPC response."""
-    if request.method != "tasks/send":
+    if request.method not in ["tasks/send", "message/send"]:
         logger.warning(f"[A2A] Unsupported method called: {request.method}")
         return {
             "jsonrpc": "2.0",
@@ -65,17 +65,43 @@ async def a2a_trainer_stream(request: A2ARequest, api_key: str = Depends(verify_
             }
         }
 
-    logger.info("[A2A] Copilot Studio used v0.3 protocol (tasks/send) ✓")
+    logger.info(f"[A2A] Copilot Studio called with method: {request.method} ✓")
     
-    # v0.3.x logic
     message_dict = request.params.model_dump().get("message", {})
     session_id = message_dict.get("contextId", "") or request.id or "session"
     parts = message_dict.get("parts", [])
     user_message_text = ""
-    for part in parts:
-        if part.get("type") == "text":
-            user_message_text = part.get("text", "")
-            break
+    
+    if request.method == "tasks/send":
+        # v0.3.x logic
+        for part in parts:
+            if part.get("type") == "text":
+                user_message_text = part.get("text", "")
+                break
+    else:
+        # v1.0 logic
+        for part in parts:
+            if part.get("kind") == "text":
+                user_message_text = part.get("text", "")
+                break
+                
+        # Fallback to chathistory if parts is empty or text not found
+        if not user_message_text:
+            message_params = request.params.message
+            if hasattr(message_params, "metadata") and hasattr(message_params.metadata, "chathistory"):
+                history_list = message_params.metadata.chathistory
+                if isinstance(history_list, list) and len(history_list) > 0:
+                    first_item = history_list[0]
+                    if isinstance(first_item, dict) and "Value" in first_item:
+                        real_history = first_item["Value"]
+                    else:
+                        real_history = history_list
+                        
+                    for msg in reversed(real_history):
+                        sender = msg.get("From", "").lower()
+                        if sender == "user" or sender == "":
+                            user_message_text = msg.get("Text", "")
+                            break
             
     if not user_message_text:
         logger.warning(f"[A2A] No user message text found. Raw payload: {request.model_dump_json()}")
@@ -120,21 +146,53 @@ async def a2a_trainer_stream(request: A2ARequest, api_key: str = Depends(verify_
     elapsed = _time.monotonic() - start_time
     logger.info(f"[A2A] Response generated | session: {session_id[:8]} | elapsed: {elapsed:.1f}s")
 
-    # v0.3 Response format
-    return {
-        "jsonrpc": "2.0",
-        "id": original_req_id,
-        "result": {
-            "id": "task-" + str(uuid.uuid4()),
-            "status": {
-                "state": "completed"
-            },
-            "artifacts": [
-                {
-                    "parts": [
-                        {"type": "text", "text": full_content}
-                    ]
-                }
-            ]
+    if request.method == "tasks/send":
+        # v0.3 Response format
+        return {
+            "jsonrpc": "2.0",
+            "id": original_req_id,
+            "result": {
+                "id": "task-" + str(uuid.uuid4()),
+                "status": {
+                    "state": "completed"
+                },
+                "artifacts": [
+                    {
+                        "parts": [
+                            {"type": "text", "text": full_content}
+                        ]
+                    }
+                ]
+            }
         }
-    }
+    else:
+        # v1.0 Hybrid Response format (Bulletproof against CS validator)
+        task_id = "task-" + str(uuid.uuid4())
+        msg_id = str(uuid.uuid4())
+        return {
+            "jsonrpc": "2.0",
+            "id": original_req_id,
+            "result": {
+                "id": task_id,
+                "contextId": session_id,
+                "status": {
+                    "state": "completed"
+                },
+                "message": {
+                    "contextId": session_id,
+                    "messageId": msg_id,
+                    "kind": "message",
+                    "role": "agent",
+                    "parts": [
+                        {"kind": "text", "text": full_content}
+                    ]
+                },
+                "artifacts": [
+                    {
+                        "parts": [
+                            {"kind": "text", "text": full_content}
+                        ]
+                    }
+                ]
+            }
+        }
